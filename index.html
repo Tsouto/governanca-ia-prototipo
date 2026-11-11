@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Governança de IA NuAudit: projeto final</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{
+  /* layout: barra de abas fixa no topo, coluna única de até 1120px; roxo como única cor de destaque */
+  --ink:#1F1A24; --muted:#5F5866; --line:#E2DCEA; --bg:#F7F5FA; --card:#FFFFFF;
+  --accent:#820AD1; --accent-dark:#5E0794; --lil:#F2EDF7;
+  --ok-bg:#E3F1E6; --ok:#1E5E2E; --warn-bg:#FFF1CC; --warn:#7A4A00; --bad-bg:#FBE2E2; --bad:#9B1C1C; --info-bg:#E6F0FB; --info:#1D4E89;
+  --display:'Montserrat','Segoe UI',Arial,sans-serif; --body:'Source Sans 3','Segoe UI',Arial,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:30px;font-weight:800} h2{font-size:22px;font-weight:800} h3{font-size:16px;font-weight:700}
+p{margin:0} a{color:var(--accent)} a:hover{color:var(--accent-dark)}
+:focus-visible{outline:3px solid var(--accent-dark);outline-offset:2px}
+header.top{position:sticky;top:0;z-index:5;background:var(--accent);color:#fff}
+.top-in{max-width:1120px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between}
+.brand{font-family:var(--display);font-weight:800;font-size:17px}
+.brand small{display:block;font-family:var(--body);font-weight:400;font-size:13px;color:#F3E6FC}
+nav.tabs{display:flex;flex-wrap:wrap;gap:4px}
+nav.tabs a{color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 12px;border-radius:8px}
+nav.tabs a[aria-current="page"]{background:#fff;color:var(--accent)}
+main{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+section.view{display:none;flex-direction:column;gap:22px}
+section.view.on{display:flex}
+.lead{font-size:18px;color:var(--muted);max-width:70ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.muted{color:var(--muted)} .small{font-size:14px}
+ul,ol{margin:0;padding-left:20px} li+li{margin-top:4px}
+.chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--lil);color:var(--accent-dark)}
+.chip.ok{background:var(--ok-bg);color:var(--ok)} .chip.warn{background:var(--warn-bg);color:var(--warn)} .chip.bad{background:var(--bad-bg);color:var(--bad)} .chip.info{background:var(--info-bg);color:var(--info)} .chip.grey{background:#EFEDF1;color:#4A4550}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:8px;border:2px solid var(--accent);background:var(--accent);color:#fff;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}
+.btn.ghost{background:#fff;color:var(--accent)} .btn.ghost:hover{background:var(--lil);color:var(--accent-dark)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:14px}
+.tri button{min-height:40px;min-width:54px;padding:0 10px;border-radius:8px;border:2px solid #CFC6DA;background:#fff;color:var(--ink);font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.tri button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700}
+input[type=text],input[type=number],select,textarea{min-height:42px;padding:8px 10px;border:0;border-bottom:2px solid #8E7FA3;border-radius:8px;background:var(--lil);font:inherit;color:var(--ink);width:100%}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:700}
+td.num{font-variant-numeric:tabular-nums}
+.result{border-radius:14px;padding:16px 20px}
+.result .big{font-family:var(--display);font-weight:800;font-size:24px;margin-top:2px}
+.r-ok{background:var(--ok-bg);color:var(--ok)} .r-warn{background:var(--warn-bg);color:var(--warn)} .r-bad{background:var(--bad-bg);color:var(--bad)} .r-info{background:var(--info-bg);color:var(--info)} .r-lil{background:var(--lil);color:var(--accent-dark)}
+.eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.flow .st{flex:1 1 150px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.flow .st.gate{background:var(--accent);border-color:var(--accent);color:#fff}
+.flow .st b{font-family:var(--display);display:block}
+.flow .st span{font-size:13px}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 18px}
+details>summary{cursor:pointer;font-family:var(--display);font-weight:700;padding:14px 0;min-height:44px}
+details>div{padding:0 0 18px;display:flex;flex-direction:column;gap:12px}
+.subnav{display:flex;flex-wrap:wrap;gap:6px}
+.subnav button{min-height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:#fff;font:inherit;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer}
+.subnav button[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.step{display:flex;gap:14px;align-items:flex-start}
+.step .n{flex:0 0 36px;height:36px;border-radius:18px;background:var(--accent);color:#fff;font-family:var(--display);font-weight:800;display:flex;align-items:center;justify-content:center}
+.step .b{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+pre{margin:0;background:#1F1A24;color:#F3E6FC;padding:14px 16px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.5;white-space:pre}
+.note{border-left:0;background:var(--lil);border-radius:10px;padding:10px 14px;font-size:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <div class="brand">Governança de IA · NuAudit<small>Projeto final para avaliação · NuFuturo (UFBA/IFBA) · dados fictícios</small></div>
+  <nav class="tabs" aria-label="Seções">
+    <a href="#inicio">Visão geral</a><a href="#cenario">Cenário de uso</a><a href="#prototipo">Protótipo</a><a href="#framework">Framework</a><a href="#modelos">Modelos</a><a href="#avaliacao">Avaliação</a><a href="#quinta">Pauta de quinta</a>
+  </nav>
+</div></header>
+<main>
+
+<!-- ============ VISÃO GERAL ============ -->
+<section class="view" id="v-inicio">
+  <h1>Governança como subproduto do trabalho</h1>
+  <p class="lead">Um registro único por solução de IA, dentro do Dobby, alimentado nos dois gates que a NuAudit já usa. A profundidade segue o tier corporativo: ferramenta simples preenche pouco, ferramenta crítica mostra evidência.</p>
+  <div class="grid">
+    <div class="card stack"><h3>O problema</h3><p>A NuAudit relatou que define processos e os abandona no caminho. O inventário não tem cadência de atualização, as decisões de estágio ficam em mensagens e não dá para reconstruir quem decidiu, quando e com base em quê.</p></div>
+    <div class="card stack"><h3>A proposta</h3><p>Nenhum sistema novo e nenhum gate novo. As seis matrizes do framework viram seções de um registro que nasce no cadastro, é verificado no Gate 2 e é atualizado a cada release.</p></div>
+    <div class="card stack"><h3>Por que isso se sustenta</h3><p>O selo de estágio só muda pelo registro. O registro mora ao lado do que o time já produz: PURPOSE.md, CHANGELOG, Jira e AI Metrics. A decisão vira consequência do pull request ou do formulário.</p></div>
+  </div>
+  <div class="card stack">
+    <h2>As seis matrizes nos dois gates</h2>
+    <div class="flow">
+      <div class="st"><b>Cadastro</b><span>M1 Enquadramento: define a trilha.<br>M2 Risco: devolve o tier.</span></div>
+      <div class="st gate"><b>Gate 1</b><span>Alpha → Beta. Autoavaliação do delivery team.</span></div>
+      <div class="st"><b>Beta</b><span>M3 Controles: checklist pelo tier.<br>Evidências são vinculadas.</span></div>
+      <div class="st gate"><b>Gate 2</b><span>Beta → Live. Audit Solutions verifica (M4) e o risco é aceito (M5).</span></div>
+      <div class="st"><b>Live</b><span>Ledger por execução, métricas e custo.<br>M6 a cada release.</span></div>
+      <div class="st"><b>Encerramento</b><span>Checklist de cinco itens fecha o ciclo.</span></div>
+    </div>
+  </div>
+  <div class="card stack">
+    <h2>Quanto trabalho por tier</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Tier corporativo</th><th>Controles</th><th>Evidências</th><th>Quem aceita o risco (proposta)</th></tr></thead>
+      <tbody>
+        <tr><td><span class="chip info">Tier 4 · Baixo</span></td><td>10 itens (6 controles + 4 do Gate 2)</td><td>Autodeclaradas</td><td>Responsável pela solução</td></tr>
+        <tr><td><span class="chip warn">Tier 3 · Médio</span></td><td>15 itens</td><td>Amostra leve no Gate 2</td><td>Responsável + liderança de governança</td></tr>
+        <tr><td><span class="chip bad">Tier 2 · Alto</span></td><td>22 itens em Live</td><td>Amostra completa, comparação com trabalho humano aprovado, revisão em contexto zero</td><td>Fórum, com ciência do CAE</td></tr>
+        <tr><td><span class="chip bad">Tier 1 · Crítico</span></td><td>23 itens, com Model Book</td><td>O mesmo do tier 2 + revisão de fora da Auditoria [a decidir]</td><td>CAE</td></tr>
+      </tbody></table></div>
+    <p class="small muted">A equivalência entre nível de risco e tier corporativo é proposta nossa e precisa ser confirmada com a metodologia AI Risk Tiering do Nubank.</p>
+  </div>
+  <div class="card stack">
+    <h2>Como usar esta página</h2>
+    <ol>
+      <li>Leia o <a href="#cenario">cenário de uso</a>: uma ferramenta fictícia do cadastro ao encerramento.</li>
+      <li>Teste o <a href="#prototipo">protótipo</a>: as telas funcionam e calculam trilha, tier, checklist, decisão e materialidade.</li>
+      <li>Consulte o <a href="#framework">framework</a> e os <a href="#modelos">modelos</a> quando quiser ver a regra por trás de cada tela.</li>
+      <li>Preencha a <a href="#avaliacao">avaliação</a> e envie o resumo gerado.</li>
+    </ol>
+    <p class="small muted">O que você preencher no protótipo fica só neste navegador. Só a avaliação é enviada para a planilha do time, quando você clica em "Gerar resumo".</p>
+  </div>
+</section>
+
+<!-- ============ CENÁRIO ============ -->
+<section class="view" id="v-cenario">
+  <h1>Cenário de uso: do cadastro ao encerramento</h1>
+  <p class="lead">Bruna, auditora do pack de Crédito, criou o agente fictício "Resumo de evidências". Ele resume papéis de trabalho para o auditor revisar. Elisa é da Audit Solutions e faz o papel de challenger. Todos os nomes e dados são inventados.</p>
+  <div class="card stack" id="cen-steps"></div>
+  <div class="note">Os tempos de cada passo não estão no cenário de propósito: medir o tempo por gate é um dos objetivos do piloto.</div>
+</section>
+
+<!-- ============ PROTÓTIPO ============ -->
+<section class="view" id="v-prototipo">
+  <div class="row" style="justify-content:space-between">
+    <div><h1>Protótipo do módulo de governança</h1><p class="muted">Simula o módulo dentro do Dobby. Solução selecionada: <b id="cur-name"></b></p></div>
+    <button class="btn ghost sm" data-act="reset">Restaurar exemplo</button>
+  </div>
+  <div class="subnav" id="subnav" role="tablist" aria-label="Telas do protótipo"></div>
+  <div id="proto" class="stack" aria-live="polite"></div>
+</section>
+
+<!-- ============ FRAMEWORK ============ -->
+<section class="view" id="v-framework">
+  <h1>Framework de referência</h1>
+  <p class="lead">As regras por trás das telas. Cada bloco indica de onde veio.</p>
+  <details open><summary>1. Matrizes, momentos e papéis</summary><div>
+    <div class="tw"><table><thead><tr><th>Momento</th><th>Matriz</th><th>Quem faz</th><th>Saída</th></tr></thead><tbody>
+    <tr><td>Cadastro, até o Gate 1</td><td>M1 Enquadramento</td><td>Delivery team; validação por quem não preencheu</td><td>Trilha: Expressa, Padrão ou Reforçada</td></tr>
+    <tr><td>Cadastro, até o Gate 1</td><td>M2 Risco inerente</td><td>Delivery team; validação por quem não preencheu</td><td>Tier corporativo</td></tr>
+    <tr><td>Gate 2</td><td>M3 Controles</td><td>Delivery team</td><td>Checklist pelo tier</td></tr>
+    <tr><td>Gate 2</td><td>M4 Evidências</td><td>Audit Solutions (challenger)</td><td>Estado de cada item obrigatório</td></tr>
+    <tr><td>Gate 2</td><td>M5 Decisão de uso</td><td>Quem aceita o risco, conforme o nível</td><td>Condição, limites e validade</td></tr>
+    <tr><td>Cada release</td><td>M6 Materialidade</td><td>Delivery team</td><td>Entrada no CHANGELOG; matrizes a revisar</td></tr>
+    </tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Atividade</th><th>Delivery team</th><th>Audit Solutions</th><th>Decision team / Comitê</th><th>Quem aceita o risco</th></tr></thead><tbody>
+    <tr><td>Cadastro, M1 e M2</td><td>R</td><td>C (valida)</td><td>I</td><td>—</td></tr>
+    <tr><td>Gate 1</td><td>A/R</td><td>C</td><td>I</td><td>—</td></tr>
+    <tr><td>M3 e evidências</td><td>R</td><td>C</td><td>I</td><td>—</td></tr>
+    <tr><td>M4 e sign-off do Gate 2</td><td>C</td><td>A</td><td>C</td><td>—</td></tr>
+    <tr><td>M5 Decisão de uso</td><td>C</td><td>R</td><td>I</td><td>A</td></tr>
+    <tr><td>M6 Mudança</td><td>R</td><td>A (Média ou Alta)</td><td>I</td><td>A (Alta)</td></tr>
+    <tr><td>Custo e métricas</td><td>A/R em Beta</td><td>A/R em Live</td><td>I</td><td>—</td></tr>
+    <tr><td>Encerramento</td><td>C</td><td>A/R</td><td>I</td><td>—</td></tr>
+    </tbody></table></div>
+    <p class="small muted">R executa · A responde pela decisão · C consultado · I informado. Segue o RACI do Rollout Governance da NuAudit. Em aberto: a Audit Solutions pertence à própria Auditoria; para o tier 1, propomos avaliar revisão pela 2ª linha ou por Model Risk.</p>
+  </div></details>
+  <details><summary>2. Reconciliação: nove etapas da arquitetura × Alpha, Beta, Live</summary><div>
+    <div class="tw"><table><thead><tr><th>Etapa da arquitetura (G1 a G9)</th><th>Onde acontece</th><th>O que o registro pede</th></tr></thead><tbody>
+    <tr><td>G1 Ideação · G2 Caso de uso</td><td>Cadastro, em Alpha</td><td>M1 e M2 como registro leve de intenção, completável até o Gate 2</td></tr>
+    <tr><td>G3 Desenvolvimento</td><td>Alpha</td><td>PURPOSE.md, prompts e configuração versionados</td></tr>
+    <tr><td>G4 Validação</td><td>Gate 1 e Gate 2</td><td>Autoavaliação no Gate 1; verificação pela Audit Solutions no Gate 2</td></tr>
+    <tr><td>G5 Implantação</td><td>Gate 2</td><td>M5: condição, limites, validade. Liberação em etapas: testers, beta, live</td></tr>
+    <tr><td>G6 Produção</td><td>Live</td><td>Ledger por execução. A produção é um ciclo dentro do ciclo</td></tr>
+    <tr><td>G7 Monitoramento</td><td>Live</td><td>Utility Score, concordância IA × auditor, custo; revisão na validade</td></tr>
+    <tr><td>G8 Melhoria</td><td>Cada release</td><td>M6 no CHANGELOG</td></tr>
+    <tr><td>G9 Descontinuação</td><td>Encerramento</td><td>Checklist de cinco itens</td></tr>
+    </tbody></table></div>
+    <p class="small muted">Fontes: Arquitetura do Framework v2 (NuFuturo), Rollout Governance (NuAudit), feedback do time técnico de 05/08/2026.</p>
+  </div></details>
+  <details><summary>3. M1 Enquadramento</summary><div>
+    <ul id="fw-q"></ul>
+    <ul><li><b>Fora do escopo:</b> sem IA ou sem vínculo com a NuAudit.</li><li><b>Reforçada:</b> algum Sim em P1, P2, P3, P4 ou P7.</li><li><b>Pendente:</b> "Não sei" em pergunta decisiva. Não autoriza uso.</li><li><b>Expressa:</b> experimento isolado, com P5 e P6 = Não. Uso real refaz o enquadramento.</li><li><b>Padrão:</b> os demais casos.</li></ul>
+    <p class="small muted">Se P2 = Sim, o registro encaminha ao DPO e à Segurança da Informação. Base: Nota Técnica, Matriz 1.</p>
+  </div></details>
+  <details><summary>4. M2 Risco inerente e tier corporativo</summary><div>
+    <p>Se a solução já tem tier corporativo, ele é importado. Se não tem, avalia-se cada cenário de falha por impacto e probabilidade (1 a 4), antes dos controles. Vale o maior nível entre os cenários, sem média.</p>
+    <div class="tw"><table><thead><tr><th>Impacto \ Probabilidade</th><th>1 Rara</th><th>2 Possível</th><th>3 Provável</th><th>4 Quase certa</th></tr></thead><tbody id="fw-m2"></tbody></table></div>
+    <ul><li>Dados sensíveis ou pessoais em larga escala: piso Alto.</li><li>Ação autônoma sobre TI ou finanças sem revisão prévia: Crítico.</li><li>Saída generativa com influência em relatório regulatório: sobe um nível.</li></ul>
+    <p>Equivalência proposta: Crítico = tier 1, Alto = tier 2, Médio = tier 3, Baixo = tier 4 <b>[confirmar com o Nubank]</b>.</p>
+    <p class="small muted">Ajuste nosso sobre a Nota Técnica: pela multiplicação original, Crítico só ocorria com 4 × 4. Na tabela acima, impacto 4 nunca fica abaixo de Alto e 4 × 3 já é Crítico.</p>
+  </div></details>
+  <details><summary>5. M3 Catálogo de controles e obrigatoriedade por tier</summary><div>
+    <div class="tw"><table><thead><tr><th>Grupo</th><th>Controle</th><th>Evidência esperada</th><th>Tier 4</th><th>Tier 3</th><th>Tier 2</th><th>Tier 1</th><th>Biblioteca</th></tr></thead><tbody id="fw-ct"></tbody></table></div>
+    <p class="small muted">"Biblioteca" aponta para os 58 controles da Arquitetura de Inventário e GRC (NuFuturo, ago. 2026). O checklist não é bloqueante: lacunas ficam registradas com responsável e prazo e pesam na M5.</p>
+  </div></details>
+  <details><summary>6. M4 Evidências</summary><div>
+    <ul><li><b>M</b> Demonstrado: evidência localizada e teste registrado, com revisor e data.</li><li><b>P</b> Parcial. <b>N</b> Não demonstrado. <b>NT</b> Não testável. <b>NA</b> Não aplicável, com justificativa aceita.</li><li>Sem soma e sem nota global. P, N ou NT em item obrigatório impedem concluir pela auditabilidade.</li><li>Um link sozinho não comprova: o revisor testa uma amostra proporcional ao tier.</li></ul>
+    <div class="tw"><table><thead><tr><th>Dimensão</th><th>Alpha</th><th>Beta</th><th>Live</th></tr></thead><tbody>
+    <tr><td>Escopo, uso e identidade</td><td>Uso previsto, dono e limites registrados</td><td>Versão candidata e integrações identificadas</td><td>Versão ativa e histórico de releases recuperáveis</td></tr>
+    <tr><td>Proveniência de dados, modelo e configuração</td><td>Fontes, modelo e prompt previstos</td><td>O que foi de fato usado no piloto, versionado</td><td>Mudanças ligadas à versão e às execuções</td></tr>
+    <tr><td>Reconstrução de execução e decisão</td><td>Campos de registro definidos</td><td>Amostra do piloto reconstruível de ponta a ponta</td><td>Eventos recuperáveis durante a retenção</td></tr>
+    <tr><td>Testes e limites</td><td>Plano e critérios</td><td>Resultados ligados à versão</td><td>Monitoramento e reavaliações</td></tr>
+    <tr><td>Supervisão humana</td><td>Quem decide e como rejeita a saída</td><td>Trilha de aprovação na amostra</td><td>Intervenções e exceções recuperáveis</td></tr>
+    <tr><td>Acesso, retenção e mudança</td><td>Links e responsáveis definidos</td><td>Revisor recupera os artefatos</td><td>Teste de recuperação registrado</td></tr>
+    </tbody></table></div>
+    <p class="small muted">Base: nota e planilha da Matriz 4 (Victor Augusto, set. 2026).</p>
+  </div></details>
+  <details><summary>7. M5 Decisão de uso</summary><div>
+    <p>Sete critérios, de 0 a 3: 0 ausente, 1 parcial ou informal, 2 implementado e documentado, 3 implementado, documentado e verificado.</p>
+    <ul><li><b>Mitigação Forte</b> (todos ≥ 2 e ao menos quatro com 3): reduz 2 níveis.</li><li><b>Adequada</b> (nenhum 0 e média ≥ 2,0): reduz 1 nível.</li><li><b>Fraca:</b> não reduz.</li><li><b>Piso:</b> inerente Alto ou Crítico nunca fica abaixo de Médio.</li></ul>
+    <div class="tw"><table><thead><tr><th>Risco residual</th><th>Condição</th><th>Estágio máximo</th><th>Quem aceita (proposta)</th><th>Validade</th></tr></thead><tbody>
+    <tr><td>Baixo</td><td>Liberado</td><td>Live</td><td>Responsável pela solução</td><td>12 meses</td></tr>
+    <tr><td>Médio</td><td>Liberado com condições</td><td>Live</td><td>Responsável + liderança de governança de IA</td><td>6 meses</td></tr>
+    <tr><td>Alto</td><td>Uso restrito</td><td>Beta</td><td>Fórum de governança, com ciência do CAE</td><td>3 meses ou fim do piloto</td></tr>
+    <tr><td>Crítico</td><td>Não autorizado</td><td>Alpha isolado</td><td>CAE</td><td>Até reavaliação</td></tr>
+    </tbody></table></div>
+    <ul><li><b>E1</b> saída com efeito sem revisão humana (C1 = 0): não autorizado.</li><li><b>E2</b> dados sem tratamento autorizado (C6 = 0): não autorizado.</li><li><b>E3</b> sem monitoramento nem desativação (C5 = 0): máximo Beta.</li><li><b>E4</b> não auditável (C4 = 0): máximo Beta.</li><li><b>E5</b> incidente grave sem tratamento: suspenso.</li></ul>
+    <p class="small muted">Base: nota e planilha da Matriz 5 (Paulo, set. 2026). Harmonização nossa com a Nota Técnica consolidada: auditabilidade parcial (C4 = 1) também limita o estágio a Beta. Os papéis de aceite precisam ser traduzidos para a estrutura nova da NuAudit.</p>
+  </div></details>
+  <details><summary>8. M6 Materialidade da mudança</summary><div>
+    <ol><li>Registrar a mudança como entrada do CHANGELOG.</li><li>Se estava prevista no envelope documentado do agente e não aciona gatilho, segue o fluxo normal de release.</li><li>Caso contrário, pontuar seis dimensões de 1 a 3: finalidade, dados, impacto e risco, funcionamento, usuários afetados, controles.</li><li>Soma 6 a 9: Baixa. 10 a 14: Média. 15 a 18: Alta. Qualquer nota 3 garante no mínimo Média.</li><li>Gatilhos que levam direto a Alta: nova finalidade principal, novo modelo ou lógica decisória, controles insuficientes, novos dados sensíveis.</li></ol>
+    <p>Baixa mantém a classificação. Média revisa só as matrizes afetadas. Alta exige nova avaliação, e o aceite anterior deixa de valer. Troca de modelo na plataforma é avaliada uma vez para todos os agentes afetados. Não fracionar mudanças.</p>
+    <p class="small muted">Base: pesquisa da Matriz 6 (Gustavo, set. 2026); conceito de modificação substancial do AI Act, art. 3(23) e 43(4).</p>
+  </div></details>
+  <details><summary>9. Encerramento (descontinuação)</summary><div>
+    <p><b>Gatilhos para abrir o encerramento:</b> Utility Score na faixa baixa por dois ciclos seguidos [limiar a calibrar], substituição por outra solução, incidente grave sem correção viável, solução sem dono, aceite vencido sem renovação.</p>
+    <p><b>Evidência que fecha o ciclo:</b> registro de encerramento com cinco itens.</p>
+    <ol><li>Motivo e decisão registrados, com data e responsável.</li><li>Usuários e packs dependentes avisados.</li><li>Prompts, configuração e ledger arquivados.</li><li>Dados descartados conforme a política de retenção.</li><li>Acessos removidos e selo atualizado para "Encerrada".</li></ol>
+    <p class="small muted">Responde ao ponto do time técnico: há critério de descontinuação, mas nunca houve encerramento formal com arquivamento. Falta definir o prazo de retenção de prompts, logs e ledgers [decisão da NuAudit].</p>
+  </div></details>
+  <details><summary>10. Custo e métricas</summary><div>
+    <ul><li><b>Custo por agente:</b> lido da AI Metrics Platform, que já tem a coluna de custo. O registro guarda o dono do custo e um limite de alerta, definido no Gate 2.</li><li><b>Dono do custo:</b> delivery team em Beta, Audit Solutions em Live, como no RACI do Rollout Governance.</li><li><b>Verified AI Utility Score:</b> uso × satisfação, já calculado pela NuAudit. Entra na revisão de cada validade.</li><li><b>Concordância IA × auditor:</b> quantas vezes a decisão final do auditor coincide com a recomendação. É a medida de qualidade da saída.</li><li><b>Tempo por gate:</b> mede o custo da própria governança. Se subir, o processo está ficando burocrático.</li></ul>
+    <div class="tw"><table><thead><tr><th>Indicador</th><th>Fonte</th></tr></thead><tbody>
+    <tr><td>% de soluções em uso com registro e selo válidos</td><td>Dobby</td></tr><tr><td>% de mudanças de estágio com decisão registrada</td><td>Dobby</td></tr><tr><td>Aceites vencidos</td><td>Dobby</td></tr><tr><td>Utility Score e concordância IA × auditor por agente</td><td>AI Metrics Platform</td></tr><tr><td>Custo por agente frente ao limite</td><td>AI Metrics Platform</td></tr><tr><td>Tempo gasto por gate</td><td>Dobby</td></tr>
+    </tbody></table></div>
+    <p class="small muted">Metas: definir com a NuAudit depois do piloto.</p>
+  </div></details>
+  <details><summary>11. Matriz de riscos</summary><div>
+    <div class="tw"><table><thead><tr><th>Risco</th><th>Pergunta que aciona</th><th>Controles que tratam</th><th>Categoria no NIST AI 600-1</th></tr></thead><tbody id="fw-rk"></tbody></table></div>
+    <p class="small muted">Categorias de risco: Checklist de Tiering v0.3 e Arquitetura de Inventário e GRC (NuFuturo). Cada "Sim" no enquadramento já aponta os riscos e os controles.</p>
+  </div></details>
+  <details><summary>12. NIST AI 600-1: o que entra no catálogo</summary><div>
+    <div class="tw"><table><thead><tr><th>Categoria de risco (NIST AI 600-1, 2024)</th><th>Aplicação ao portfólio da NuAudit</th><th>Controle no catálogo</th></tr></thead><tbody id="fw-nist"></tbody></table></div>
+    <p class="small muted">Mapeamento inicial feito para este projeto final. Precisa passar pelo método de derivação (CDM) da equipe antes de ser tratado como requisito.</p>
+  </div></details>
+</section>
+
+<!-- ============ MODELOS ============ -->
+<section class="view" id="v-modelos">
+  <h1>Modelos para o piloto</h1>
+  <p class="lead">Quatro modelos prontos para copiar. O piloto roda com eles, sem construir sistema: a ferramenta é a fase 3 da RFC.</p>
+  <div class="card stack"><div class="row" style="justify-content:space-between"><h2>Arquivo de governança (GOVERNANCE.md)</h2><button class="btn ghost sm" data-copy="t-gov">Copiar</button></div><p class="muted small">Fica no repositório do agente, ao lado do PURPOSE.md e do CHANGELOG. A aprovação do pull request é o registro da decisão.</p><pre id="t-gov"></pre></div>
+  <div class="card stack"><div class="row" style="justify-content:space-between"><h2>Ledger de execução (uma linha por execução)</h2><button class="btn ghost sm" data-copy="t-led">Copiar</button></div><p class="muted small">Padrão mínimo. Guarda referência da entrada, não o conteúdo, para não duplicar dado sensível.</p><pre id="t-led"></pre></div>
+  <div class="card stack"><div class="row" style="justify-content:space-between"><h2>Registro de decisão (formulário ou descrição do pull request)</h2><button class="btn ghost sm" data-copy="t-dec">Copiar</button></div><pre id="t-dec"></pre></div>
+  <div class="card stack"><div class="row" style="justify-content:space-between"><h2>Planilha do piloto</h2><button class="btn ghost sm" data-copy="t-pil">Copiar para colar na planilha</button></div><p class="muted small">Colunas separadas por tabulação. Cole na célula A1 de uma planilha vazia. Uma linha por solução do piloto.</p><pre id="t-pil"></pre></div>
+</section>
+
+<!-- ============ AVALIAÇÃO ============ -->
+<section class="view" id="v-avaliacao">
+  <h1>Avaliação pelo time</h1>
+  <p class="lead">Faça as cinco tarefas no protótipo, anote como foi e gere o resumo no fim. Leva cerca de 20 minutos.</p>
+  <form id="ev" class="stack" autocomplete="off">
+    <div class="card grid"><label class="f" for="ev-nome">Seu nome<input type="text" id="ev-nome"></label><label class="f" for="ev-papel">Seu papel<select id="ev-papel"><option>Equipe UFBA/IFBA</option><option>NuAudit: delivery team</option><option>NuAudit: Audit Solutions</option><option>NuAudit: liderança</option><option>Outro</option></select></label></div>
+    <div class="card stack"><h2>Tarefas</h2><div class="tw"><table><thead><tr><th>Tarefa</th><th>Conseguiu?</th><th>Minutos</th><th>Clareza (1 a 5)</th></tr></thead><tbody id="ev-t"></tbody></table></div></div>
+    <div class="card stack"><h2>Perguntas</h2>
+      <label class="f" for="ev-bur">Onde pareceu burocrático?<textarea id="ev-bur" rows="2"></textarea></label>
+      <label class="f" for="ev-cut">O que você cortaria?<textarea id="ev-cut" rows="2"></textarea></label>
+      <label class="f" for="ev-mis">O que faltou?<textarea id="ev-mis" rows="2"></textarea></label>
+      <label class="f" for="ev-tier">O tier e a condição de uso que saíram batem com a sua percepção de risco?<textarea id="ev-tier" rows="2"></textarea></label>
+      <label class="f" for="ev-nota">Nota geral: usaria isto no dia a dia? (1 a 5)<select id="ev-nota"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+    </div>
+    <div class="row"><button type="submit" class="btn">Gerar resumo</button></div>
+    <div class="card stack"><div class="row" style="justify-content:space-between"><h2>Resumo para enviar</h2><button type="button" class="btn ghost sm" data-copy="ev-out">Copiar</button></div><p class="small" id="ev-st" role="status">Ao gerar o resumo, a página envia a sua avaliação para a planilha do time. Se não conseguir, copie e cole no canal combinado.</p><textarea id="ev-out" rows="12" readonly aria-label="Resumo da avaliação"></textarea></div>
+  </form>
+  <div class="card stack" id="ev-adm" hidden><div class="row" style="justify-content:space-between"><h2>Avaliações recebidas</h2><div class="row"><button type="button" class="btn ghost sm" id="ev-reload">Atualizar</button><button type="button" class="btn ghost sm" data-copy="ev-all">Copiar todas</button></div></div><p class="small muted">Visível só para o dono e os editores da página.</p><div class="tw"><table><thead><tr><th>Data</th><th>Nome</th><th>Papel</th><th>Nota</th><th>Tarefas (conseguiu · min · clareza)</th><th>Burocrático</th><th>Cortaria</th><th>Faltou</th><th>Tier bate?</th></tr></thead><tbody id="ev-rows"><tr><td colspan="9" class="muted">Carregando.</td></tr></tbody></table></div><pre id="ev-all" class="sr"></pre></div>
+</section>
+
+<!-- ============ QUINTA ============ -->
+<section class="view" id="v-quinta">
+  <h1>Pauta de quinta, 12/11/2026</h1>
+  <p class="lead">Roteiro de 20 minutos para a reunião com a NuAudit, as cinco decisões que precisamos deles e o estado de cada pendência.</p>
+  <div class="card stack"><h2>Roteiro</h2><div class="tw"><table><thead><tr><th>Min</th><th>Bloco</th><th>O que mostrar</th></tr></thead><tbody>
+    <tr><td class="num">0–3</td><td>O que ouvimos de vocês</td><td>Aderência é o problema; Dobby é o registro; os gates já existem. Aba Visão geral</td></tr>
+    <tr><td class="num">3–10</td><td>Demonstração</td><td>Cenário de uso no protótipo: cadastro, tier, Gate 2, decisão. Uma ferramenta simples e uma de tier 2</td></tr>
+    <tr><td class="num">10–13</td><td>Mudança e encerramento</td><td>Envelope de mudanças previstas e checklist de encerramento</td></tr>
+    <tr><td class="num">13–18</td><td>Cinco decisões</td><td>Lista abaixo</td></tr>
+    <tr><td class="num">18–20</td><td>Piloto e próximos passos</td><td>Dois casos, formato, o que medir</td></tr>
+  </tbody></table></div></div>
+  <div class="card stack"><h2>Decisões que precisamos da NuAudit</h2><ol>
+    <li>O módulo de governança pode viver no Dobby, com selo de estágio e arquivo de governança no repositório do agente?</li>
+    <li>Podem compartilhar os critérios do AI Risk Tiering corporativo, para fecharmos a equivalência com a M2?</li>
+    <li>Quem aceita o risco em cada nível, na estrutura nova?</li>
+    <li>Para o tier 1, haverá revisão de fora da Auditoria?</li>
+    <li>Quais são os dois casos do piloto e quem responde por cada um?</li></ol></div>
+  <div class="card stack"><h2>Piloto proposto</h2><ul>
+    <li><b>Caso de maior impacto (sugestão):</b> Action Plan Validator. Tem PRD, devolve recomendação e terá uso pelos auditados.</li>
+    <li><b>Caso simples (sugestão):</b> um assistente de conhecimento em NotebookLM.</li>
+    <li><b>Formato:</b> arquivo de governança no repositório e a planilha da aba Modelos.</li>
+    <li><b>O que medir:</b> tempo por matriz, se o tier bate com a percepção do time e quais itens sobraram ou faltaram.</li></ul></div>
+  <div class="card stack"><h2>Estado das pendências</h2><div class="tw"><table><thead><tr><th>Pendência</th><th>Situação</th><th>Como ficou</th></tr></thead><tbody>
+    <tr><td>Descontinuação</td><td><span class="chip ok">Resolvida</span></td><td>Gatilhos e checklist de cinco itens (Framework, bloco 9; tela Encerramento)</td></tr>
+    <tr><td>Custo</td><td><span class="chip ok">Resolvida</span></td><td>Dono e limite de alerta no registro; leitura da AI Metrics (bloco 10)</td></tr>
+    <tr><td>Matriz de riscos</td><td><span class="chip ok">Resolvida</span></td><td>15 riscos ligados a pergunta, controle e NIST AI 600-1 (bloco 11)</td></tr>
+    <tr><td>Catálogo de controles por tier e gate</td><td><span class="chip ok">Resolvida</span></td><td>Bloco 5; o mesmo catálogo alimenta a tela do Gate 2</td></tr>
+    <tr><td>Nove etapas × Alpha, Beta, Live</td><td><span class="chip ok">Resolvida</span></td><td>Tabela de reconciliação (bloco 2)</td></tr>
+    <tr><td>Modelos do piloto</td><td><span class="chip ok">Resolvida</span></td><td>Arquivo de governança, ledger, registro de decisão e planilha (aba Modelos)</td></tr>
+    <tr><td>NIST AI 600-1</td><td><span class="chip warn">Parcial</span></td><td>Mapeamento inicial das 12 categorias (bloco 12). Falta a derivação pelo método da equipe</td></tr>
+    <tr><td>SR 26-2</td><td><span class="chip ok">Verificada</span></td><td>Emitida em 17/04/2026 por Fed, OCC e FDIC; substitui a SR 11-7 e a SR 21-8. Usar só como referência de proporcionalidade: análises indicam que IA generativa e agêntica ficam fora do escopo</td></tr>
+    <tr><td>Colorado SB 26-189</td><td><span class="chip ok">Verificada</span></td><td>Sancionada em maio de 2026 (14/05 na maioria das fontes; uma indica 20/05), vigência em 01/01/2027; revoga e substitui a SB 24-205</td></tr>
+    <tr><td>Citações da ISO/IEC 42001</td><td><span class="chip bad">Aberta</span></td><td>A norma é paga e não está na pasta. Conferir no texto, em especial o controle A.4.2 citado na Matriz 1</td></tr>
+    <tr><td>Equivalência nível × tier corporativo</td><td><span class="chip bad">Depende do Nubank</span></td><td>Decisão 2</td></tr>
+    <tr><td>Papéis de aceite e revisão do tier 1</td><td><span class="chip bad">Depende do Nubank</span></td><td>Decisões 3 e 4</td></tr>
+    <tr><td>Prazo de retenção de prompts, logs e ledgers</td><td><span class="chip bad">Depende do Nubank</span></td><td>Necessário para o item 4 do encerramento</td></tr>
+  </tbody></table></div></div>
+  <div class="card stack"><h2>Correções nas notas técnicas, por matriz</h2><div class="tw"><table><thead><tr><th>Matriz</th><th>Correção</th></tr></thead><tbody>
+    <tr><td>M1 Enquadramento</td><td>Conferir a citação do controle A.4.2 da ISO/IEC 42001. Retirar o nome de colega do campo de preenchimento</td></tr>
+    <tr><td>M2 Risco inerente</td><td>Trocar as três linhas de defesa pelos papéis do Rollout Governance. RIPD só quando há dado pessoal. Remover o gatilho de infraestrutura crítica, que não está na lista. Rever a descrição do Sentinela: o AI Status o descreve como curadoria de contexto em três camadas, não como auditor de código. Adotar a tabela de consulta. Retirar o rodapé "Uso Interno" do Nubank</td></tr>
+    <tr><td>M3 Controles</td><td>Retirar o bloqueio de gate no Jira: o checklist da NuAudit é não bloqueante. Trocar a validação pela 2ª linha pela Audit Solutions. Ligar o nível ao tier. Incluir o catálogo</td></tr>
+    <tr><td>M4 Evidências</td><td>Manter. Fixar a lista de itens obrigatórios por tier</td></tr>
+    <tr><td>M5 Condições de uso</td><td>Manter a regra reproduzível e a tabela de aceite, que saíram da nota consolidada. Unificar "Moderado" e "Médio"</td></tr>
+    <tr><td>M6 Materialidade</td><td>Manter o passo da mudança prevista e a nota sobre dependências compartilhadas, que saíram da nota consolidada</td></tr>
+  </tbody></table></div></div>
+  <div class="card stack"><div class="row" style="justify-content:space-between"><h2>E-mail para a NuAudit</h2><button class="btn ghost sm" data-copy="t-mail">Copiar</button></div><pre id="t-mail" style="white-space:pre-wrap"></pre></div>
+  <div class="card stack"><h2>Fontes</h2><ul class="small">
+    <li>NuAudit. Rollout Governance: roles, responsibilities and phased rollout (em revisão, 2026); AI Strategy Toolkit (2026); Product Strategy: AI Metrics Platform; Product Toolkit: Auditee-facing Action Plan Validator; AI Status (exemplo, jun. 2026).</li>
+    <li>NuAudit. Respostas à solicitação de informações (27/10/2026); feedback do time técnico (05/08/2026); RFC v1.</li>
+    <li>NuFuturo. Ata de 03/09/2026; Status Report de 29/10/2026; Arquitetura do Framework v2; Arquitetura de Inventário e GRC (ago. 2026); Matrizes de Classificação, Nota Técnica v1.0 e notas originais das seis matrizes.</li>
+    <li>NIST. AI RMF 1.0 (NIST AI 100-1, 2023); Generative AI Profile (NIST AI 600-1, 2024).</li>
+    <li>ISO/IEC 42001:2023; ISO/IEC 23894:2023. IIA, Global Internal Audit Standards (2024). Lei nº 13.709/2018 (LGPD).</li>
+    <li>Federal Reserve, OCC e FDIC, SR 26-2 (17/04/2026). Colorado SB 26-189 (2026). Ambas conferidas por busca na web em 10/11/2026.</li>
+  </ul></div>
+</section>
+</main>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const NV=['','Baixo','Médio','Alto','Crítico'], NVC=['','info','warn','bad','bad'];
+const chip=(t,k)=>'<span class="chip '+(k||'')+'">'+esc(t)+'</span>';
+
+/* ---------- dados do framework ---------- */
+const Q=[['ia','A solução usa inteligência artificial?'],['vinc','É usada ou desenvolvida no contexto da NuAudit?'],
+['p1','P1 · A saída entra em conclusão, parecer ou relatório oficial de auditoria?'],
+['p2','P2 · Trata dado pessoal, confidencial, papel de trabalho ou dado de auditado?'],
+['p3','P3 · Decide ou age sozinha (escreve, envia, altera) sem revisão humana antes?'],
+['p4','P4 · Apoia teste SOX/ICFR ou gera informação usada para avaliar pessoas?'],
+['p7','P7 · Uma falha pode ter impacto relevante (operacional, financeiro, reputacional ou na qualidade da auditoria)?'],
+['p5','P5 · É usada por mais de um pack ou diretamente pelos auditados?'],
+['p6','P6 · Usa modelo ou fornecedor fora das plataformas homologadas?'],
+['iso','É experimento isolado, com dados públicos ou sintéticos e sem uso real?']];
+const CT=[
+['N1','c1','Escopo, finalidade e limites documentados','PURPOSE.md ou PRD','CTRL-001, 012'],
+['N1','c2','Responsável nomeado (uma pessoa)','Registro da solução','CTRL-003'],
+['N1','c3','Acesso autorizado a dados e ferramentas','Configuração de acesso','CTRL-015'],
+['N1','c4','Teste básico da tarefa','Resultado de casos de teste','CTRL-021'],
+['N1','c5','Versão de modelo, prompt e configuração registrada','Tag ou histórico do repositório','CTRL-014'],
+['N1','c6','Forma de interromper o uso','Passo de desligamento testado','CTRL-032'],
+['N2','c7','Testes dos cenários de falha, com limiar','Relatório de testes da versão','CTRL-022'],
+['N2','c8','Supervisão humana antes de a saída ter efeito','Registro de aceite ou rejeição','CTRL-036'],
+['N2','c9','Ledger de execução','Amostra de execuções reconstruída','CTRL-035'],
+['N2','c10','Tratamento de incidentes','Registro de incidente e correção','CTRL-040'],
+['N2','c11','Acompanhamento de desempenho','Utility Score e concordância IA × auditor','CTRL-039'],
+['N3','c12','Validação por quem não construiu','Relatório do validador','CTRL-025, 055'],
+['N3','c13','Testes de segurança e uso adverso (prompt injection, vazamento)','Relatório de teste','CTRL-023'],
+['N3','c14','Limites de ações e permissões do agente','Especificação e teste de bloqueio','CTRL-016, 031'],
+['N3','c15','Monitoramento com critério de intervenção','Limites de alerta definidos','CTRL-039, 045'],
+['N3','c16','Contingência ou reversão testada','Evidência do teste','CTRL-032'],
+['G2','g1','Integração com os serviços da plataforma, sem infraestrutura paralela','Arquitetura no PRD','Rollout Governance'],
+['G2','g2','Documentação de uso e suporte publicada','Guia de uso','Rollout Governance'],
+['G2','g3','Feedback do beta revisado; bloqueantes resolvidos','Registro de feedback','Rollout Governance'],
+['G2','g4','Dono do custo e limite de alerta definidos','Campo do registro; AI Metrics','GAP-016'],
+['PRIV','p1','Parecer de privacidade e segurança (se P2 = Sim)','Parecer do DPO ou da Segurança','CTRL-006, 017'],
+['T12','t1','Comparação com trabalho humano já aprovado','Relatório IA × auditor','CTRL-028'],
+['T12','t2','Revisão independente em contexto zero','Registro da revisão','CTRL-025'],
+['T1','t3','Registro no Model Book e revisão de fora da Auditoria','Registro e parecer','CTRL-055']
+].map(a=>({g:a[0],id:a[1],t:a[2],ev:a[3],lib:a[4]}));
+const GN={N1:'Nível 1',N2:'Nível 2',N3:'Nível 3',G2:'Gate 2',PRIV:'Condicional',T12:'Tiers 1 e 2',T1:'Tier 1'};
+const RK=[
+['R01 Confiabilidade da saída','P1','Testes de falha, comparação com trabalho humano','Confabulation'],
+['R02 Dependência indevida do auditor','P1','Supervisão humana, concordância IA × auditor','Human-AI Configuration'],
+['R03 Confidencialidade dos dados de auditoria','P2','Acesso autorizado, parecer de privacidade e segurança','Data Privacy; Information Security'],
+['R04 Segurança da IA','P3','Testes de segurança e uso adverso','Information Security'],
+['R05 Autonomia do agente','P3','Limites de ações e permissões, supervisão humana','Human-AI Configuration'],
+['R06 Explicabilidade e rastreabilidade','P1','Ledger de execução, versão registrada','Information Integrity'],
+['R07 Qualidade e consistência','P1','Teste básico, acompanhamento de desempenho','Confabulation'],
+['R08 Viés','P4','Teste de viés quando houver avaliação de pessoas ou amostragem','Harmful Bias and Homogenization'],
+['R09 Conformidade e independência','P4','Validação por quem não construiu; challenger','—'],
+['R10 Terceiros e modelo fundacional','P6','Uso de plataformas homologadas; avaliação do fornecedor','Value Chain and Component Integration'],
+['R11 Privacidade e proteção de dados','P2','Parecer do DPO, minimização','Data Privacy'],
+['R12 Operacional e resiliência','P5','Forma de interromper, contingência, incidentes','Value Chain and Component Integration'],
+['R13 Regulatório','P4','Encaminhamento a SOX, Compliance ou Jurídico','—'],
+['R14 Reputacional','P5','Selo de estágio visível; comunicação de beta','—'],
+['R15 Descontinuação desordenada','Encerramento','Checklist de encerramento','—']];
+const NIST=[
+['CBRN Information','Não se aplica ao escopo','—'],
+['Confabulation','Central: saída falsa contamina a conclusão de auditoria','Testes de falha com limiar; comparação com trabalho humano; concordância IA × auditor'],
+['Dangerous, Violent, or Hateful Content','Baixa relevância; coberto pelas plataformas homologadas','—'],
+['Data Privacy','Alta: papéis de trabalho e dados de auditados','Acesso autorizado; parecer de privacidade; ledger sem conteúdo sensível'],
+['Environmental Impacts','Fora do escopo; o custo por agente acompanha o consumo','Dono do custo e limite de alerta'],
+['Harmful Bias and Homogenization','Quando a solução prioriza testes, amostra ou avalia pessoas','Teste de viés [incluir como condicional de P4]'],
+['Human-AI Configuration','Alta: dependência indevida e autonomia','Supervisão humana; limites de ações; treinamento'],
+['Information Integrity','Rastreabilidade e proveniência das saídas','Ledger de execução; versão registrada'],
+['Information Security','Alta: prompt injection e vazamento','Testes de segurança e uso adverso'],
+['Intellectual Property','Baixa; atenção a material protegido em bases de conhecimento [avaliar]','—'],
+['Obscene, Degrading, and/or Abusive Content','Não se aplica ao escopo','—'],
+['Value Chain and Component Integration','Modelo de terceiros e troca de modelo na plataforma','Plataformas homologadas; M6 com avaliação única de plataforma']];
+const DIMS=[['Finalidade',['M1','M2','M5']],['Dados',['M1','M2','M3','M4']],['Impacto e risco',['M2','M5']],['Funcionamento',['M2','M3','M4']],['Usuários afetados',['M1','M5']],['Controles',['M3','M4','M5']]];
+const TRG=['Mudança da finalidade principal','Novo modelo ou nova lógica decisória','Controles existentes ficam insuficientes','Novos dados pessoais sensíveis ou críticos'];
+const CRIT=['C1 Supervisão humana','C2 Controles da M3 implementados','C3 Validação de desempenho','C4 Auditabilidade (M4)','C5 Monitoramento e contingência','C6 Dados e confidencialidade','C7 Delimitação de uso'];
+const ENC=['Motivo e decisão registrados, com data e responsável','Usuários e packs dependentes avisados','Prompts, configuração e ledger arquivados','Dados descartados conforme a política de retenção','Acessos removidos e selo atualizado'];
+const CONDS=['','Liberado','Liberado com condições','Uso restrito','Não autorizado','Suspenso'];
+const ACE=['','Responsável pela solução','Responsável + liderança de governança de IA','Fórum de governança, com ciência do CAE','CAE','CAE'];
+const VAL=[0,12,6,3,0,0];
+
+/* ---------- regras ---------- */
+function enq(a){
+  if(a.ia==='n'||a.vinc==='n')return'Fora do escopo';
+  const c=['p1','p2','p3','p4','p7'];
+  if(c.some(k=>a[k]==='s'))return'Reforçada';
+  if(['ia','vinc'].concat(c).some(k=>a[k]==='?'))return'Pendente';
+  if(Q.some(q=>!a[q[0]]))return'';
+  return (a.iso==='s'&&a.p5==='n'&&a.p6==='n')?'Expressa':'Padrão';
+}
+function cell(i,p){const sc=i*p;let l=sc>=13?4:sc>=9?3:sc>=4?2:1;if(i===4)l=Math.max(l,p>=3?4:3);return l;}
+function risk(s){
+  const m=s.m2;
+  if(m.corp)return{idx:5-(+m.corp),tier:+m.corp,src:'tier corporativo importado'};
+  if(enq(s.m1.ans)==='Expressa')return{idx:1,tier:4,src:'registro simplificado'};
+  if(!m.cen.length)return{};
+  let x=0;m.cen.forEach(c=>{x=Math.max(x,cell(+c.i,+c.p));});
+  if(m.g.a)x=Math.max(x,3); if(m.g.b)x=4; if(m.g.c)x=Math.min(4,x+1);
+  return{idx:x,tier:5-x,src:'avaliação por cenários'};
+}
+function ctrls(s){
+  const t=risk(s).tier||3, L=t===4?['N1']:t===3?['N1','N2']:['N1','N2','N3'];
+  return CT.filter(c=>L.includes(c.g)||c.g==='G2'||(c.g==='T12'&&t<=2)||(c.g==='T1'&&t===1)||(c.g==='PRIV'&&s.m1.ans.p2==='s'));
+}
+function gate(s){
+  const it=ctrls(s), st=s.g2.st, ap=it.filter(c=>st[c.id]!=='NA');
+  const pend=ap.filter(c=>st[c.id]!=='M'), hard=pend.filter(c=>st[c.id]!=='P');
+  const m=ap.length-pend.length, p=ap.length?m/ap.length:0;
+  return{it,pend,ok:ap.length>0&&!pend.length,c2:p<.5?0:p<.8?1:p<1?2:3,c4:!pend.length?3:(hard.length||pend.length>2)?(pend.length>ap.length/2?0:1):2,m,n:ap.length};
+}
+function decide(s){
+  const r=risk(s); if(!r.idx)return{err:'Avalie o risco inerente (M2) antes da decisão.'};
+  const c=s.m5.c.map(Number), min=Math.min.apply(null,c), avg=c.reduce((a,b)=>a+b,0)/7, n3=c.filter(x=>x===3).length;
+  const mit=(min>=2&&n3>=4)?'Forte':(min>=1&&avg>=2)?'Adequada':'Fraca';
+  let res=Math.max(1,r.idx-(mit==='Forte'?2:mit==='Adequada'?1:0)); if(r.idx>=3)res=Math.max(res,2);
+  let rank=res, maxBeta=false; const why=[];
+  if(c[0]===0&&s.m5.e1){rank=Math.max(rank,4);why.push('E1: saída com efeito sem revisão humana');}
+  if(c[5]===0){rank=Math.max(rank,4);why.push('E2: dados sem tratamento autorizado');}
+  if(c[4]===0){rank=Math.max(rank,3);why.push('E3: sem monitoramento nem desativação');}
+  if(c[3]===0){rank=Math.max(rank,3);why.push('E4: não auditável');}
+  else if(c[3]===1){maxBeta=true;why.push('Auditabilidade parcial: máximo Beta até completar as evidências');}
+  if(s.m5.e5){rank=5;why.push('E5: incidente grave sem tratamento');}
+  const max=rank<=2?(maxBeta?'Beta':'Live'):rank===3?'Beta':rank===4?'Alpha isolado':'Nenhum';
+  return{mit,avg,res,rank,cond:CONDS[rank],max,ace:ACE[rank],val:VAL[rank],why,inh:r.idx};
+}
+function material(m){
+  const sum=DIMS.reduce((a,d)=>a+(+m.v[d[0]]||1),0), trig=TRG.some(t=>m.g[t]);
+  let lv=sum>=15?'Alta':sum>=10?'Média':'Baixa';
+  if(lv==='Baixa'&&DIMS.some(d=>+m.v[d[0]]===3))lv='Média';
+  if(trig)lv='Alta';
+  const env=m.env&&!trig; if(env)lv='Baixa';
+  const set={}; DIMS.forEach(d=>{if((+m.v[d[0]]||1)>=2||lv==='Alta')d[1].forEach(x=>set[x]=1);});
+  if(lv!=='Baixa')set.M4=1; if(lv==='Alta')set.M5=1;
+  return{sum,lv,env,mats:lv==='Baixa'?[]:Object.keys(set).sort()};
+}
+
+/* ---------- estado ---------- */
+const today=()=>new Date();
+const fmt=d=>d.toLocaleDateString('pt-BR');
+const addM=n=>{const d=today();d.setMonth(d.getMonth()+n);return fmt(d);};
+function blank(o){return Object.assign({id:'s'+Math.random().toString(36).slice(2,8),nome:'',dono:'',plat:'Dobby',estagio:'Alpha',ver:'v0.1',fin:'',
+  m1:{ans:{}},m2:{corp:'',cen:[],g:{}},g2:{st:{},ev:{}},m5:{c:[0,0,0,0,0,0,0],e1:false,e5:false,reg:null,lim:'',cond:'',alvo:'Live'},
+  m6:{env:false,v:{},g:{},desc:'',ver:''},enc:{ok:{},motivo:''},hist:[],met:null},o||{});}
+function seed(){
+  const all=k=>{const a={};Q.forEach(q=>a[q[0]]=k[q[0]]||'n');a.ia='s';a.vinc='s';return a;};
+  const s1=blank({id:'a1',nome:'Assistente de normas',dono:'Ana S.',plat:'NotebookLM',estagio:'Live',ver:'v1.2',fin:'Responde dúvidas sobre normas internas e públicas.'});
+  s1.m1.ans=all({});s1.m2.cen=[{d:'Resposta desatualizada sobre uma norma',i:1,p:2}];
+  ctrls(s1).forEach(c=>s1.g2.st[c.id]='M');s1.m5.c=[2,3,2,3,2,2,2];s1.m5.reg={cond:'Liberado',res:'Baixo',ace:ACE[1],val:'10/03/2027',max:'Live'};
+  s1.hist=[{d:'10/03/2026',t:'Decisão de uso: Liberado, até Live. Aceite: responsável pela solução.'}];s1.met={u:38,s:71,conc:null,custo:'dentro do limite'};
+  const s2=blank({id:'a2',nome:'Resumo de evidências',dono:'Bruna L.',plat:'Dobby',estagio:'Beta',ver:'v0.9',fin:'Resume papéis de trabalho para o auditor revisar antes de anexar.'});
+  s2.m1.ans=all({p5:'s'});s2.m2.cen=[{d:'Resumo omite evidência relevante',i:2,p:3},{d:'Resumo cita trecho que não existe no papel de trabalho',i:2,p:2}];
+  ctrls(s2).forEach(c=>s2.g2.st[c.id]='M');Object.assign(s2.g2.st,{c6:'NT',c7:'P',c9:'N',c11:'P'});
+  s2.g2.ev={c1:'PRD v3, seção 2',c4:'15 casos de teste (exemplo)',c5:'tag v0.9 no repositório'};s2.m5.c=[3,2,1,1,1,3,2];
+  s2.hist=[{d:'20/08/2026',t:'Cadastro e enquadramento: Padrão (P5 = Sim).'},{d:'02/09/2026',t:'Risco inerente validado: Médio, tier 3.'},{d:'15/09/2026',t:'Gate 1: Alpha → Beta, autoavaliação do delivery team.'}];
+  s2.met={u:40,s:60,conc:82,custo:'dentro do limite'};
+  const s3=blank({id:'a3',nome:'Copiloto de relatório',dono:'Carla M.',plat:'Dobby',estagio:'Alpha',ver:'v0.3',fin:'Sugere redação de achados a partir dos papéis de trabalho.'});
+  s3.m1.ans=all({p1:'s',p2:'s'});s3.m2.cen=[{d:'Achado redigido com fato ou citação inexistente',i:3,p:3},{d:'Dado pessoal de auditado enviado ao fornecedor do modelo',i:3,p:2}];s3.m2.g={a:true};
+  s3.hist=[{d:'05/10/2026',t:'Cadastro e enquadramento: Reforçada (P1 e P2 = Sim). Encaminhado ao DPO.'}];
+  const s4=blank({id:'a4',nome:'Priorizador de testes',dono:'Diego R.',plat:'Databricks',estagio:'Live',ver:'v2.0',fin:'Sugere a ordem dos testes de auditoria por risco.'});
+  s4.m1.ans=all({p1:'s',p5:'s'});s4.m2.cen=[{d:'Priorização ignora sistematicamente uma área',i:3,p:3}];
+  ctrls(s4).forEach(c=>s4.g2.st[c.id]='M');s4.m5.c=[3,3,3,3,2,3,2];s4.m5.reg={cond:'Liberado com condições',res:'Médio',ace:ACE[2],val:'05/11/2026',max:'Live',venc:true};
+  s4.hist=[{d:'05/05/2026',t:'Decisão de uso: Liberado com condições, até Live, validade de 6 meses.'}];s4.met={u:55,s:48,conc:76,custo:'acima do limite'};
+  const s5=blank({id:'a5',nome:'Classificador de achados',dono:'Fernanda T.',plat:'Cursor',estagio:'Alpha',ver:'v0.1',fin:'Classifica achados por tema e gravidade sugerida.'});
+  s5.m1.ans={ia:'s',vinc:'s',p1:'n',p2:'?',p3:'n',p4:'n',p7:'n'};
+  return{cur:'a2',sub:'port',sols:[s1,s2,s3,s4,s5]};
+}
+let S;
+function load(){try{const r=localStorage.getItem('nufuturo-gov-v1');if(r){S=JSON.parse(r);if(S&&S.sols&&S.sols.length)return;}}catch(e){} S=seed();}
+function save(){try{localStorage.setItem('nufuturo-gov-v1',JSON.stringify(S));}catch(e){}}
+const cur=()=>S.sols.find(x=>x.id===S.cur)||S.sols[0];
+const log=(s,t)=>s.hist.push({d:fmt(today()),t});
+
+/* ---------- telas do protótipo ---------- */
+const SUB=[['port','Portfólio'],['painel','Painel da solução'],['cad','Cadastro · M1'],['risco','Risco · M2'],['gate','Gate 2 · M3 e M4'],['dec','Decisão · M5'],['mud','Mudança · M6'],['enc','Encerramento']];
+const TRC={'Expressa':'info','Padrão':'warn','Reforçada':'bad','Pendente':'','Fora do escopo':'grey','':'grey'};
+function tierChip(s){const r=risk(s);return r.idx?chip('Tier '+r.tier+' · '+NV[r.idx],NVC[r.idx]):chip('A avaliar','grey');}
+function atencao(s){
+  if(s.estagio==='Encerrada')return'—';
+  const t=enq(s.m1.ans); if(t==='Pendente'||!t)return'Enquadramento pendente';
+  if(t==='Fora do escopo')return'—';
+  if(!risk(s).idx)return'Avaliar risco (M2)';
+  if(s.m5.reg&&s.m5.reg.venc)return'Aceite vencido: renovar';
+  if(s.met&&s.met.custo==='acima do limite')return'Custo acima do limite';
+  if(!s.m5.reg)return s.estagio==='Alpha'?'Em Alpha: completar até o Gate 2':'Gate 2 em andamento';
+  return'—';
+}
+function vPort(){
+  const n=S.sols.length, pend=S.sols.filter(s=>atencao(s)!=='—').length, venc=S.sols.filter(s=>s.m5.reg&&s.m5.reg.venc).length;
+  const k=(l,v,x)=>'<div class="card"><div class="small muted">'+l+'</div><div style="font-family:var(--display);font-weight:800;font-size:26px;color:var(--accent)">'+v+'</div><div class="small muted">'+x+'</div></div>';
+  return '<div class="grid">'+k('Soluções no portfólio',n,'com registro no módulo')+k('Pedem atenção',pend,'ver coluna Atenção')+k('Aceites vencidos',venc,'renovar na M5')+k('Tempo por gate','—','medir no piloto')+'</div>'+
+  '<div class="row" style="justify-content:space-between"><h2>Soluções</h2><button class="btn" data-act="new">Nova solução</button></div>'+
+  '<div class="card tw" style="padding:6px 10px"><table><thead><tr><th>Solução</th><th>Plataforma</th><th>Selo de estágio</th><th>Trilha (M1)</th><th>Tier (M2)</th><th>Condição (M5)</th><th>Validade</th><th>Atenção</th></tr></thead><tbody>'+
+  S.sols.map(s=>{const t=enq(s.m1.ans)||'A responder';return '<tr><td><button class="btn ghost sm" data-act="sel" data-id="'+s.id+'">'+esc(s.nome||'Sem nome')+'</button><div class="small muted">'+esc(s.ver)+' · '+esc(s.dono)+'</div></td><td>'+esc(s.plat)+'</td><td>'+chip(s.estagio,s.estagio==='Encerrada'?'grey':'')+'</td><td>'+chip(t,TRC[t]||'grey')+'</td><td>'+tierChip(s)+'</td><td>'+(s.m5.reg?esc(s.m5.reg.cond):'—')+'</td><td>'+(s.m5.reg?(s.m5.reg.venc?'<b style="color:var(--bad)">vencida</b>':esc(s.m5.reg.val)):'—')+'</td><td>'+esc(atencao(s))+'</td></tr>';}).join('')+
+  '</tbody></table></div>';
+}
+function fld(l,path,v,type){const id='f-'+path.replace(/\W/g,'-');return '<label class="f" for="'+id+'">'+l+(type==='area'?'<textarea id="'+id+'" rows="2" data-set="'+path+'">'+esc(v)+'</textarea>':'<input type="text" id="'+id+'" data-set="'+path+'" value="'+esc(v)+'">')+'</label>';}
+function sel(l,path,v,opts){const id='f-'+path.replace(/\W/g,'-');return '<label class="f" for="'+id+'">'+l+'<select id="'+id+'" data-set="'+path+'" data-re="1">'+opts.map(o=>{const val=Array.isArray(o)?o[0]:o,tx=Array.isArray(o)?o[1]:o;return '<option value="'+esc(val)+'"'+(String(v)===String(val)?' selected':'')+'>'+esc(tx)+'</option>';}).join('')+'</select></label>';}
+function vCad(){
+  const s=cur(), a=s.m1.ans, t=enq(a), n=Q.filter(q=>a[q[0]]).length;
+  const mats={Expressa:['M1 validada por quem não preencheu','M3 nível 1 (6 itens essenciais)','M5 simplificada, para o teste em Alpha','M2 e M4 dispensadas; uso real refaz o enquadramento'],
+    'Padrão':['M1 validada por quem não preencheu','M2 com 1 ou 2 cenários principais','M3 pelo tier','M4: autodeclarada no tier 4; amostra leve no Gate 2 para o tier 3','M5 com validade pelo risco residual','M6 a cada release'],
+    'Reforçada':['M1 validada','M2 com todos os cenários relevantes','M3 pelo tier e estágio','M4 no Gate 2 pela Audit Solutions','M5 com aceite conforme o nível','M6 a cada release']}[t]||[];
+  const cls={Reforçada:'r-bad','Padrão':'r-warn',Expressa:'r-info',Pendente:'r-lil','Fora do escopo':'r-lil'}[t]||'r-lil';
+  const why={Reforçada:'Há gatilho de aprofundamento. O tier sai da M2.','Padrão':'Uso real sem gatilho de aprofundamento. A profundidade segue o tier da M2.',Expressa:'Experimento isolado, sem gatilhos. Vale só enquanto não houver uso real.',Pendente:'Falta informação decisiva. Registre a lacuna, o responsável e a data. Pendente não autoriza o uso.','Fora do escopo':'Registre a justificativa; a triagem se encerra aqui.'}[t]||(n+' de '+Q.length+' respondidas.');
+  return '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))"><div class="card stack"><h2>Identificação</h2>'+fld('Nome da solução','nome',s.nome)+fld('Versão','ver',s.ver)+fld('Responsável (uma pessoa)','dono',s.dono)+
+  sel('Plataforma','plat',s.plat,['Dobby','Cursor','Glean','NotebookLM','Gemini','Databricks'])+sel('Estágio','estagio',s.estagio,['Alpha','Beta','Live'])+fld('Finalidade','fin',s.fin,'area')+
+  '<p class="small muted">No Dobby, estes campos viriam do catálogo e do PURPOSE.md. A IA poderia sugerir as respostas ao lado, citando a fonte.</p></div>'+
+  '<div class="stack"><div class="card stack"><h2>Enquadramento (M1)</h2>'+Q.map(q=>'<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:10px"><span style="flex:1 1 280px">'+esc(q[1])+'</span><span class="tri row" role="group" aria-label="'+esc(q[1])+'">'+[['s','Sim'],['n','Não'],['?','Não sei']].map(o=>'<button type="button" data-act="ans" data-k="'+q[0]+'" data-v="'+o[0]+'" aria-pressed="'+(a[q[0]]===o[0])+'">'+o[1]+'</button>').join('')+'</span></div>').join('')+'</div>'+
+  '<div class="result '+cls+'"><div class="eyebrow">Enquadramento proposto</div><div class="big">'+esc(t||'Responda as perguntas')+'</div><p>'+esc(why)+'</p>'+(a.p2==='s'?'<p><b>P2 = Sim:</b> encaminhar ao DPO e à Segurança da Informação.</p>':'')+'</div>'+
+  (mats.length?'<div class="card stack"><h3>O que será aplicado</h3><ul>'+mats.map(m=>'<li>'+esc(m)+'</li>').join('')+'</ul></div>':'')+
+  '<div class="row"><button class="btn" data-act="savecad">Salvar e continuar</button><button class="btn ghost" data-act="go" data-sub="port">Voltar ao portfólio</button></div></div></div>';
+}
+function vRisco(){
+  const s=cur(), m=s.m2, r=risk(s), t=enq(s.m1.ans);
+  if(t==='Expressa')return '<div class="result r-info"><div class="eyebrow">M2 dispensada</div><div class="big">Registro simplificado</div><p>Experimento isolado: aplica só o nível 1 de controles. Se passar a ter uso real, refaça o enquadramento.</p></div>';
+  const I=[[1,'1 Insignificante'],[2,'2 Moderado'],[3,'3 Alto'],[4,'4 Crítico']],P=[[1,'1 Rara'],[2,'2 Possível'],[3,'3 Provável'],[4,'4 Quase certa']];
+  return '<div class="card stack"><h2>Risco inerente (M2)</h2><p class="muted">Antes dos controles. Revisão humana e filtros existentes não reduzem a nota.</p>'+
+  sel('Tier corporativo já atribuído pelo Nubank?','m2.corp',m.corp,[['','Não tem: avaliar por cenários'],['4','Tier 4 · Baixo'],['3','Tier 3 · Médio'],['2','Tier 2 · Alto'],['1','Tier 1 · Crítico']])+'</div>'+
+  (m.corp?'':'<div class="card stack"><div class="row" style="justify-content:space-between"><h3>Cenários de falha</h3><button class="btn ghost sm" data-act="addcen">Adicionar cenário</button></div><div class="tw"><table><thead><tr><th>Cenário e consequência</th><th>Impacto</th><th>Probabilidade</th><th>Nível</th><th><span class="sr">Remover</span></th></tr></thead><tbody>'+
+  m.cen.map((c,i)=>{const l=cell(+c.i,+c.p);return '<tr><td style="min-width:240px"><input type="text" aria-label="Cenário '+(i+1)+'" data-set="m2.cen.'+i+'.d" value="'+esc(c.d)+'"></td><td><select aria-label="Impacto do cenário '+(i+1)+'" data-set="m2.cen.'+i+'.i" data-re="1">'+I.map(o=>'<option value="'+o[0]+'"'+(+c.i===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select></td><td><select aria-label="Probabilidade do cenário '+(i+1)+'" data-set="m2.cen.'+i+'.p" data-re="1">'+P.map(o=>'<option value="'+o[0]+'"'+(+c.p===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select></td><td>'+chip(NV[l],NVC[l])+'</td><td><button class="btn ghost sm" data-act="delcen" data-i="'+i+'">Remover</button></td></tr>';}).join('')+
+  '</tbody></table></div>'+(t==='Padrão'?'<p class="small muted">Trilha Padrão: bastam 1 ou 2 cenários principais, com justificativa.</p>':'<p class="small muted">Trilha Reforçada: registre todos os cenários relevantes.</p>')+
+  '<h3>Gatilhos (aplicados depois do cálculo)</h3>'+[['a','Dados sensíveis ou pessoais em larga escala (piso Alto)'],['b','Ação autônoma sobre TI ou finanças sem revisão prévia (Crítico)'],['c','Saída generativa com influência em relatório regulatório (sobe um nível)']].map(g=>'<label class="row"><input type="checkbox" data-set="m2.g.'+g[0]+'" data-re="1"'+(m.g[g[0]]?' checked':'')+'> '+g[1]+'</label>').join('')+'</div>')+
+  '<div class="result '+(r.idx?(r.idx>=3?'r-bad':r.idx===2?'r-warn':'r-info'):'r-lil')+'"><div class="eyebrow">Resultado</div><div class="big">'+(r.idx?'Tier '+r.tier+' · '+NV[r.idx]:'Adicione ao menos um cenário')+'</div>'+(r.idx?'<p>Origem: '+esc(r.src)+'. Controles: '+(r.tier===4?'nível 1':r.tier===3?'níveis 1 e 2':'níveis 1 a 3 em Live')+'.'+(r.tier<=2?' Registro no Model Book.':'')+'</p>':'')+'<p class="small">Equivalência nível × tier a confirmar com o Nubank.</p></div>'+
+  '<div class="row"><button class="btn" data-act="saverisk">Salvar e ver o painel</button></div>';
+}
+function vGate(){
+  const s=cur(), g=gate(s), r=risk(s), auto=r.tier===4;
+  if(!r.idx)return '<div class="result r-lil"><div class="big">Avalie o risco primeiro</div><p>O checklist depende do tier.</p></div><div class="row"><button class="btn" data-act="go" data-sub="risco">Ir para o risco</button></div>';
+  const O=['','M','P','N','NT','NA'];
+  return '<div class="card stack"><h2>Gate 2: controles e evidências</h2><div class="row">'+tierChip(s)+chip(auto?'Evidências autodeclaradas':'Verificação por amostra: Audit Solutions','grey')+chip(g.m+' de '+g.n+' demonstrados')+'</div>'+
+  '<p class="muted small">M demonstrado · P parcial · N não demonstrado · NT não testável · NA não aplicável (com justificativa). Um link sozinho não comprova.</p>'+
+  '<div class="tw"><table><thead><tr><th>Grupo</th><th>Controle</th><th>Evidência (link ou referência)</th><th>Estado</th></tr></thead><tbody>'+
+  g.it.map(c=>{const v=s.g2.st[c.id]||'';return '<tr><td>'+chip(GN[c.g],'grey')+'</td><td style="min-width:220px"><b>'+esc(c.t)+'</b><div class="small muted">Esperado: '+esc(c.ev)+'</div></td><td style="min-width:200px"><input type="text" aria-label="Evidência: '+esc(c.t)+'" data-set="g2.ev.'+c.id+'" value="'+esc(s.g2.ev[c.id]||'')+'" placeholder="Link do registro"></td><td><select aria-label="Estado: '+esc(c.t)+'" data-set="g2.st.'+c.id+'" data-re="1">'+O.map(o=>'<option value="'+o+'"'+(v===o?' selected':'')+'>'+(o||'—')+'</option>').join('')+'</select></td></tr>';}).join('')+'</tbody></table></div>'+
+  '<div class="row"><button class="btn ghost sm" data-act="allm">Marcar todos como demonstrados (atalho de teste)</button></div></div>'+
+  '<div class="result '+(g.ok?'r-ok':'r-bad')+'"><div class="eyebrow">Resultado da M4</div><div class="big">'+(g.ok?'Auditabilidade demonstrada':'Não demonstrada: '+g.pend.length+' item(ns) em aberto')+'</div>'+(g.ok?'<p>A Audit Solutions pode dar o sign-off "ready for next phase".</p>':'<ul>'+g.pend.map(c=>'<li>'+esc(c.t)+' ('+(s.g2.st[c.id]||'sem estado')+')</li>').join('')+'</ul><p>O checklist não bloqueia: as lacunas seguem para a decisão de uso, com responsável e prazo.</p>')+'</div>'+
+  '<div class="row"><button class="btn" data-act="togate">Encaminhar para a decisão (M5)</button></div>';
+}
+function vDec(){
+  const s=cur(), d=decide(s), g=gate(s);
+  if(d.err)return '<div class="result r-lil"><div class="big">'+esc(d.err)+'</div></div><div class="row"><button class="btn" data-act="go" data-sub="risco">Ir para o risco</button></div>';
+  const H=['Sugestão pelo Gate 2: '+g.c2,'','','Sugestão pelo Gate 2: '+g.c4,'','',''];
+  const ok=['Alpha','Beta','Live'].indexOf(s.m5.alvo)<=['Alpha','Beta','Live'].indexOf(d.max);
+  return '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))"><div class="card stack"><h2>Critérios (0 a 3)</h2><p class="small muted">0 ausente · 1 parcial · 2 implementado e documentado · 3 verificado</p>'+
+  CRIT.map((c,i)=>'<div class="row" style="justify-content:space-between"><label for="c'+i+'" style="flex:1 1 180px">'+c+(H[i]?'<div class="small muted">'+H[i]+'</div>':'')+'</label><select id="c'+i+'" data-set="m5.c.'+i+'" data-re="1" style="width:80px">'+[0,1,2,3].map(o=>'<option'+(+s.m5.c[i]===o?' selected':'')+'>'+o+'</option>').join('')+'</select></div>').join('')+
+  '<label class="row"><input type="checkbox" data-set="m5.e1" data-re="1"'+(s.m5.e1?' checked':'')+'> A saída produz efeito sem revisão humana</label><label class="row"><input type="checkbox" data-set="m5.e5" data-re="1"'+(s.m5.e5?' checked':'')+'> Há incidente grave sem tratamento</label></div>'+
+  '<div class="stack"><div class="result '+(d.rank===1?'r-ok':d.rank===2?'r-info':d.rank===3?'r-warn':'r-bad')+'"><div class="eyebrow">Condição de uso</div><div class="big">'+d.cond+'</div>'+
+  '<p>Inerente '+NV[d.inh]+' · mitigação '+d.mit+' (média '+d.avg.toFixed(1).replace('.',',')+') · residual <b>'+NV[d.res]+'</b></p><p>Estágio máximo: <b>'+d.max+'</b> · Aceite: '+d.ace+(d.val?' · Validade: '+d.val+' meses':'')+'</p>'+(d.why.length?'<ul>'+d.why.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'')+'</div>'+
+  '<div class="card stack">'+sel('Estágio pretendido','m5.alvo',s.m5.alvo,['Alpha','Beta','Live'])+(ok?'':'<div class="note"><b>'+esc(s.m5.alvo)+' não é permitido agora.</b> O registro fica no estágio máximo de '+d.max+'.</div>')+fld('Limites de uso (usuários, usos vedados)','m5.lim',s.m5.lim,'area')+fld('Condições e pendências (responsável e prazo)','m5.cond',s.m5.cond,'area')+
+  (d.rank>=3?fld('Justificativa (obrigatória para restringir ou não autorizar)','m5.just',s.m5.just||'','area'):'')+
+  '<div class="row"><button class="btn" data-act="regdec">Registrar decisão</button></div><p class="small muted">Ao registrar: grava quem aceita, a data e a validade, atualiza o selo e avisa o canal.</p></div></div></div>';
+}
+function vMud(){
+  const s=cur(), m=s.m6, r=material(m);
+  return '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))"><div class="card stack"><h2>Mudança (M6)</h2>'+fld('Versão proposta','m6.ver',m.ver)+fld('O que muda e por quê','m6.desc',m.desc,'area')+
+  '<label class="row"><input type="checkbox" data-set="m6.env" data-re="1"'+(m.env?' checked':'')+'> Estava prevista no envelope documentado do agente</label><p class="small muted">Exemplo de envelope: ajuste de prompt dentro da finalidade, versão menor do mesmo modelo.</p>'+
+  '<h3>Gatilhos que levam a Alta</h3>'+TRG.map((t,i)=>'<label class="row"><input type="checkbox" data-set="m6.g.'+esc(t)+'" data-re="1"'+(m.g[t]?' checked':'')+'> '+esc(t)+'</label>').join('')+'</div>'+
+  '<div class="stack"><div class="card stack"><h3>Dimensões (1 baixa · 2 média · 3 alta)</h3>'+DIMS.map((d,i)=>'<div class="row" style="justify-content:space-between"><label for="d'+i+'">'+d[0]+'</label><select id="d'+i+'" data-set="m6.v.'+d[0]+'" data-re="1" style="width:80px">'+[1,2,3].map(o=>'<option'+((+m.v[d[0]]||1)===o?' selected':'')+'>'+o+'</option>').join('')+'</select></div>').join('')+'</div>'+
+  '<div class="result '+(r.lv==='Alta'?'r-bad':r.lv==='Média'?'r-warn':'r-info')+'"><div class="eyebrow">Materialidade · soma '+r.sum+'</div><div class="big">'+r.lv+'</div><p>'+(r.env?'Prevista e sem gatilho: segue o fluxo normal de release, com entrada no CHANGELOG e testes.':r.lv==='Baixa'?'Mantém a classificação, se os testes confirmarem as premissas.':r.lv==='Média'?'Revisão dirigida das matrizes afetadas.':'Nova avaliação e validação independente. O aceite anterior deixa de valer.')+'</p><p><b>Matrizes a revisar:</b> '+(r.mats.length?r.mats.join(', '):'nenhuma')+'</p><p class="small">Na dúvida entre níveis, adote o mais alto. Não fracione mudanças.</p></div>'+
+  '<div class="row"><button class="btn" data-act="regmud">Registrar no CHANGELOG</button></div></div></div>';
+}
+function vEnc(){
+  const s=cur(), n=ENC.filter((e,i)=>s.enc.ok[i]).length;
+  if(s.estagio==='Encerrada')return '<div class="result r-lil"><div class="eyebrow">Solução encerrada</div><div class="big">'+esc(s.nome)+'</div><p>O registro permanece para consulta.</p></div>';
+  return '<div class="card stack"><h2>Encerramento</h2><p class="muted">Gatilhos: Utility Score baixo por dois ciclos, substituição, incidente sem correção viável, solução sem dono ou aceite vencido sem renovação.</p>'+fld('Motivo do encerramento','enc.motivo',s.enc.motivo,'area')+
+  ENC.map((e,i)=>'<label class="row"><input type="checkbox" data-set="enc.ok.'+i+'" data-re="1"'+(s.enc.ok[i]?' checked':'')+'> '+e+'</label>').join('')+
+  '<div class="row"><button class="btn" data-act="regenc">Registrar encerramento</button>'+chip(n+' de 5 itens',n===5?'ok':'warn')+'</div><p class="small muted" id="enc-msg"></p></div>';
+}
+function govmd(s){
+  const r=risk(s), g=gate(s), t=enq(s.m1.ans)||'a responder', a=s.m1.ans;
+  return ['# Governança: '+(s.nome||'[nome]'),'','versão: '+s.ver,'responsável: '+s.dono,'plataforma: '+s.plat,'estágio: '+s.estagio,'finalidade: '+(s.fin||'[ver PURPOSE.md]'),'',
+  '## M1 Enquadramento','trilha: '+t,'gatilhos: '+(['p1','p2','p3','p4','p7','p5','p6'].filter(k=>a[k]==='s').map(k=>k.toUpperCase()).join(', ')||'nenhum'),'',
+  '## M2 Risco inerente',r.idx?'nível: '+NV[r.idx]+' (tier '+r.tier+', '+r.src+')':'a avaliar'].concat(s.m2.corp?[]:s.m2.cen.map(c=>'- '+c.d+': impacto '+c.i+', probabilidade '+c.p)).concat(['',
+  '## M3 e M4 Controles e evidências',g.m+' de '+g.n+' demonstrados']).concat(g.it.map(c=>'- ['+(s.g2.st[c.id]||' ')+'] '+c.t+(s.g2.ev[c.id]?' -> '+s.g2.ev[c.id]:''))).concat(['',
+  '## M5 Decisão de uso',s.m5.reg?('condição: '+s.m5.reg.cond+'\nrisco residual: '+s.m5.reg.res+'\nestágio máximo: '+s.m5.reg.max+'\naceite: '+s.m5.reg.ace+'\nvalidade: '+s.m5.reg.val+(s.m5.lim?'\nlimites: '+s.m5.lim:'')+(s.m5.cond?'\ncondições: '+s.m5.cond:'')):'sem decisão registrada','',
+  '## Envelope de mudanças previstas','- [descrever: ajustes de prompt dentro da finalidade, versão menor do mesmo modelo]','',
+  '## Histórico']).concat(s.hist.map(h=>'- '+h.d+': '+h.t)).join('\n');
+}
+function vPainel(){
+  const s=cur(), r=risk(s), g=gate(s), t=enq(s.m1.ans)||'A responder';
+  const mc=(m,n,v,k,x)=>'<div class="card stack"><div class="row" style="justify-content:space-between"><span class="small" style="font-weight:700;color:var(--accent)">'+m+'</span>'+chip(k[0],k[1])+'</div><div class="small muted">'+n+'</div><div style="font-family:var(--display);font-weight:800;font-size:18px">'+v+'</div><button class="btn ghost sm" data-act="go" data-sub="'+x+'">Abrir</button></div>';
+  return '<div class="card stack"><h2>'+esc(s.nome||'Sem nome')+'</h2><p class="muted">'+esc(s.fin)+'</p><div class="row">'+chip(s.ver)+chip('Selo: '+s.estagio,s.estagio==='Encerrada'?'grey':'')+chip(t,TRC[t]||'grey')+tierChip(s)+chip('Responsável: '+s.dono,'grey')+'</div></div>'+
+  '<div class="grid">'+mc('M1','Enquadramento',esc(t),t==='Pendente'||t==='A responder'?['Pendente','warn']:['Registrado','ok'],'cad')+mc('M2','Risco inerente',r.idx?'Tier '+r.tier+' · '+NV[r.idx]:'A avaliar',r.idx?['Registrado','ok']:['Pendente','warn'],'risco')+
+  mc('M3 e M4','Controles e evidências',g.m+' de '+g.n+' demonstrados',g.ok?['Demonstrada','ok']:['Em aberto','warn'],'gate')+mc('M5','Decisão de uso',s.m5.reg?esc(s.m5.reg.cond):'Sem decisão',s.m5.reg?(s.m5.reg.venc?['Vencida','bad']:['Até '+s.m5.reg.val,'ok']):['Pendente','warn'],'dec')+
+  mc('M6','Mudança','Registrar release',['Por release','grey'],'mud')+mc('Fim','Encerramento',s.estagio==='Encerrada'?'Encerrada':'Em uso',['Quando couber','grey'],'enc')+'</div>'+
+  (s.met?'<div class="card stack"><h3>Métricas e custo (valores fictícios; no Dobby viriam da AI Metrics)</h3><div class="grid"><div><b>Utility Score</b><br>'+Math.round(s.met.u*s.met.s/100)+' (uso '+s.met.u+'% × satisfação '+s.met.s+'%)</div><div><b>Concordância IA × auditor</b><br>'+(s.met.conc?s.met.conc+'% na amostra':'não se aplica')+'</div><div><b>Custo</b><br>'+esc(s.met.custo)+'</div></div></div>':'')+
+  '<div class="card stack"><h3>Histórico de decisões</h3>'+(s.hist.length?'<ul>'+s.hist.slice().reverse().map(h=>'<li><b>'+esc(h.d)+'</b> · '+esc(h.t)+'</li>').join('')+'</ul>':'<p class="muted">Sem registros.</p>')+'</div>'+
+  '<div class="card stack"><div class="row" style="justify-content:space-between"><h3>Arquivo de governança gerado</h3><button class="btn ghost sm" data-copy="gov-out">Copiar</button></div><p class="small muted">É o que iria para o repositório do agente. Muda conforme você preenche as telas.</p><pre id="gov-out">'+esc(govmd(s))+'</pre></div>';
+}
+const VIEWS={port:vPort,painel:vPainel,cad:vCad,risco:vRisco,gate:vGate,dec:vDec,mud:vMud,enc:vEnc};
+function render(){
+  const s=cur(); $('#cur-name').textContent=s.nome||'Sem nome';
+  $('#subnav').innerHTML=SUB.map(x=>'<button type="button" data-act="go" data-sub="'+x[0]+'" aria-current="'+(S.sub===x[0])+'">'+x[1]+'</button>').join('');
+  $('#proto').innerHTML=(VIEWS[S.sub]||vPort)(); save();
+}
+function setPath(o,path,val){const k=path.split('.');let x=o;for(let i=0;i<k.length-1;i++){if(x[k[i]]==null)x[k[i]]={};x=x[k[i]];}x[k[k.length-1]]=val;}
+
+/* ---------- eventos ---------- */
+document.addEventListener('change',e=>{
+  const el=e.target.closest('[data-set]'); if(!el)return;
+  let v=el.type==='checkbox'?el.checked:el.value; if(el.tagName==='SELECT'&&/^\d+$/.test(v)&&!/corp/.test(el.dataset.set))v=+v;
+  setPath(cur(),el.dataset.set,v); if(el.dataset.re)render(); else save();
+});
+function copy(id,btn){
+  const el=document.getElementById(id); if(!el)return; const tx=el.value!==undefined&&el.tagName==='TEXTAREA'?el.value:el.textContent;
+  const done=()=>{const o=btn.textContent;btn.textContent='Copiado';setTimeout(()=>btn.textContent=o,1500);};
+  const fb=()=>{try{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);if(el.select)el.select();btn.textContent='Selecionado: use Ctrl+C';}catch(e){}};
+  try{navigator.clipboard.writeText(tx).then(done,fb);}catch(e){fb();}
+}
+document.addEventListener('click',e=>{
+  const cp=e.target.closest('[data-copy]'); if(cp){copy(cp.dataset.copy,cp);return;}
+  const b=e.target.closest('[data-act]'); if(!b)return; const a=b.dataset.act, s=cur();
+  if(a==='go'){S.sub=b.dataset.sub;}
+  else if(a==='sel'){S.cur=b.dataset.id;S.sub='painel';}
+  else if(a==='new'){const n=blank({nome:'Nova solução'});S.sols.push(n);S.cur=n.id;S.sub='cad';}
+  else if(a==='reset'){S=seed();}
+  else if(a==='ans'){s.m1.ans[b.dataset.k]=b.dataset.v;}
+  else if(a==='savecad'){const t=enq(s.m1.ans);log(s,'Enquadramento: '+(t||'incompleto')+'.');S.sub=(t==='Padrão'||t==='Reforçada')?'risco':'painel';}
+  else if(a==='addcen'){s.m2.cen.push({d:'',i:2,p:2});}
+  else if(a==='delcen'){s.m2.cen.splice(+b.dataset.i,1);}
+  else if(a==='saverisk'){const r=risk(s);if(r.idx)log(s,'Risco inerente: '+NV[r.idx]+', tier '+r.tier+'.');S.sub='painel';}
+  else if(a==='allm'){ctrls(s).forEach(c=>s.g2.st[c.id]='M');}
+  else if(a==='togate'){const g=gate(s);s.m5.c[1]=g.c2;s.m5.c[3]=g.c4;log(s,'Gate 2: '+g.m+' de '+g.n+' itens demonstrados.');S.sub='dec';}
+  else if(a==='regdec'){const d=decide(s);if(d.err)return;
+    if(d.rank>=3&&!(s.m5.just||'').trim()){S.sub='dec';render();const j=document.getElementById('f-m5-just');if(j){j.focus();j.placeholder='Preencha a justificativa para registrar';}return;}
+    const st=['Alpha','Beta','Live'], alvo=Math.min(st.indexOf(s.m5.alvo),st.indexOf(d.max)<0?0:st.indexOf(d.max));
+    s.m5.reg={cond:d.cond,res:NV[d.res],ace:d.ace,val:d.val?addM(d.val):'até reavaliação',max:d.max};
+    if(d.rank<=3&&alvo>st.indexOf(s.estagio))s.estagio=st[alvo];
+    log(s,'Decisão de uso: '+d.cond+', máximo '+d.max+'. Aceite: '+d.ace+'. Selo: '+s.estagio+'.');S.sub='painel';}
+  else if(a==='regmud'){const r=material(s.m6);log(s,'Mudança '+(s.m6.ver||'[versão]')+': materialidade '+r.lv+(r.mats.length?'; revisar '+r.mats.join(', '):'')+'. '+(s.m6.desc||''));
+    if(s.m6.ver)s.ver=s.m6.ver; if(r.lv==='Alta'&&s.m5.reg){s.m5.reg.venc=true;log(s,'Aceite anterior deixou de valer: nova decisão de uso necessária.');}
+    s.m6={env:false,v:{},g:{},desc:'',ver:''};S.sub='painel';}
+  else if(a==='regenc'){const n=ENC.filter((x,i)=>s.enc.ok[i]).length;if(n<5||!s.enc.motivo.trim()){const m=$('#enc-msg');if(m)m.textContent='Marque os cinco itens e informe o motivo para registrar.';return;}
+    s.estagio='Encerrada';log(s,'Encerramento registrado. Motivo: '+s.enc.motivo);S.sub='painel';}
+  else if(a==='cen'){S.cur=b.dataset.id||'a2';S.sub=b.dataset.sub;location.hash='prototipo';}
+  render(); if(a==='go'||a==='sel'||a==='cen')$('#subnav').scrollIntoView({block:'nearest'});
+});
+
+/* ---------- conteúdo estático gerado ---------- */
+const STEPS=[
+['Cadastro e enquadramento','Bruna cadastra o agente e responde dez perguntas. Só P5 é "Sim": três packs usam o resumo. Sai a trilha Padrão.','Trilha, gatilhos e quem preencheu.','cad'],
+['Risco inerente','Ela registra dois cenários de falha. O pior é o resumo omitir uma evidência relevante: impacto 2, probabilidade 3. Sai nível Médio, tier 3.','Cenários, notas e tier. Elisa valida, por não ter preenchido.','risco'],
+['Gate 1: Alpha para Beta','O próprio time confere a demo, nomeia os testers e avisa que é beta em validação. Não há sign-off externo.','Mudança de selo para Beta, com data e responsável.','painel'],
+['Gate 2: controles e evidências','O checklist do tier 3 traz 15 itens. Bruna vincula as evidências. Elisa reabre cinco execuções pelo ledger e marca cada item. Quatro ficam em aberto.','Estado de cada item, amostra verificada, revisora e data.','gate'],
+['Decisão de uso','Com mitigação Fraca e auditabilidade parcial, sai "Liberado com condições", mas com máximo Beta. Bruna recebe as pendências com prazo.','Condição, limites, quem aceitou e validade.','dec'],
+['Segunda tentativa','Bruna corrige as lacunas. No protótipo, use o atalho "Marcar todos como demonstrados", encaminhe de novo e ajuste os critérios. O selo passa a Live.','Nova decisão e novo selo. A anterior fica no histórico.','gate'],
+['Release com mudança','Meses depois, o time troca o modelo. Não estava no envelope e aciona gatilho: materialidade Alta. O aceite anterior deixa de valer.','Entrada no CHANGELOG, materialidade e matrizes a revisar.','mud'],
+['Revisão na validade','Na data de validade, a liderança olha Utility Score, concordância IA × auditor e custo, e renova ou ajusta a decisão.','Renovação do aceite.','painel'],
+['Encerramento','Um agente mais novo substitui o resumo. A Audit Solutions cumpre os cinco itens e fecha o registro.','Registro de encerramento. O selo vira "Encerrada".','enc']];
+function statics(){
+  $('#cen-steps').innerHTML=STEPS.map((s,i)=>'<div class="step"><div class="n" aria-hidden="true">'+(i+1)+'</div><div class="b"><h3>'+s[0]+'</h3><p>'+s[1]+'</p><p class="small muted"><b>O que fica registrado:</b> '+s[2]+'</p><div><button class="btn ghost sm" data-act="cen" data-id="a2" data-sub="'+s[3]+'">Abrir no protótipo</button></div></div></div>').join('<hr style="border:0;border-top:1px solid var(--line);width:100%;margin:4px 0">');
+  $('#fw-q').innerHTML=Q.map(q=>'<li>'+esc(q[1])+'</li>').join('');
+  $('#fw-m2').innerHTML=[4,3,2,1].map(i=>'<tr><th scope="row">'+['','1 Insignificante','2 Moderado','3 Alto','4 Crítico'][i]+'</th>'+[1,2,3,4].map(p=>{const l=cell(i,p);return '<td>'+chip(NV[l],NVC[l])+'</td>';}).join('')+'</tr>').join('');
+  const yes=(c,t)=>{const L=t===4?['N1']:t===3?['N1','N2']:['N1','N2','N3'];return (L.includes(c.g)||c.g==='G2'||(c.g==='T12'&&t<=2)||(c.g==='T1'&&t===1))?'Sim':c.g==='PRIV'?'Se P2':'—';};
+  $('#fw-ct').innerHTML=CT.map(c=>'<tr><td>'+chip(GN[c.g],'grey')+'</td><td>'+esc(c.t)+'</td><td>'+esc(c.ev)+'</td>'+[4,3,2,1].map(t=>'<td>'+yes(c,t)+'</td>').join('')+'<td class="small muted">'+esc(c.lib)+'</td></tr>').join('');
+  $('#fw-rk').innerHTML=RK.map(r=>'<tr><td><b>'+esc(r[0])+'</b></td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+esc(r[3])+'</td></tr>').join('');
+  $('#fw-nist').innerHTML=NIST.map(r=>'<tr><td><b>'+esc(r[0])+'</b></td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>').join('');
+  $('#t-gov').textContent=['# Governança: [nome do agente]','','versão: [v0.1]','responsável: [uma pessoa]','plataforma: [Dobby | Cursor | Glean | NotebookLM | Gemini | Databricks]','estágio: [Alpha | Beta | Live | Encerrada]','finalidade: [ver PURPOSE.md]','dono do custo: [pessoa]   limite de alerta: [valor por mês]','',
+  '## M1 Enquadramento','trilha: [Expressa | Padrão | Reforçada | Pendente | Fora do escopo]','gatilhos: [P1, P2, ...]','preenchido por: [nome, data]   validado por: [nome, data]','',
+  '## M2 Risco inerente','tier corporativo: [1 a 4]   origem: [importado | avaliado por cenários]','- [cenário]: impacto [1-4], probabilidade [1-4]','gatilhos de elevação: [nenhum | dados | autonomia | relatório regulatório]','',
+  '## M3 e M4 Controles e evidências','- [M|P|N|NT|NA] [controle] -> [link da evidência]','amostra verificada: [o que foi reaberto]   revisor: [nome, data]','',
+  '## M5 Decisão de uso','condição: [Liberado | Liberado com condições | Uso restrito | Não autorizado | Suspenso]','risco residual: [Baixo | Médio | Alto | Crítico]   mitigação: [Forte | Adequada | Fraca]','estágio máximo: [Alpha | Beta | Live]','limites: [usuários, usos vedados]','condições: [ação, responsável, prazo]','aceite: [quem, data]   validade: [data]','',
+  '## Envelope de mudanças previstas','- [mudanças que seguem o fluxo normal de release]','',
+  '## Encerramento','motivo: []   avisos: []   arquivamento: []   descarte: []   acessos removidos: []'].join('\n');
+  $('#t-led').textContent=JSON.stringify({execucao_id:'[id único]',data_hora:'[ISO 8601]',agente:'[nome]',versao:'[versão do agente, modelo e prompt]',executado_por:'[usuário]',entrada_ref:'[link ou ID do papel de trabalho, sem copiar o conteúdo]',fontes_e_ferramentas:['[fonte ou chamada de ferramenta]'],saida_ref:'[link ou ID da saída]',revisor:'[usuário]',decisao_do_revisor:'[aceita | aceita com ajuste | rejeitada]',motivo_da_divergencia:'[se houve]',feedback:'[positivo | negativo + motivo]'},null,2);
+  $('#t-dec').textContent=['Solução e versão: ','Mudança: [Alpha -> Beta | Beta -> Live | renovação | restrição | encerramento]','Tier e trilha: ','Evidências (links): ','Itens em aberto, com responsável e prazo: ','Condição de uso e estágio máximo: ','Quem decidiu e quem aceitou o risco: ','Validade: '].join('\n');
+  $('#t-pil').textContent=[['Solução','Versão','Responsável','Plataforma','Estágio','Trilha (M1)','Gatilhos','Tier (M2)','Origem do tier','Itens do checklist','Itens demonstrados','Itens em aberto','Mitigação (M5)','Risco residual','Condição de uso','Estágio máximo','Quem aceitou','Validade','Min. no cadastro e M1','Min. na M2','Min. no Gate 2','Min. na M5','O tier bate com a percepção?','Itens desnecessários','Itens que faltaram'].join('\t'),['[caso simples]'].concat(Array(24).fill('')).join('\t'),['[caso de maior impacto]'].concat(Array(24).fill('')).join('\t')].join('\n');
+  $('#t-mail').textContent=['Assunto: Governança de IA da NuAudit: protótipo para quinta (12/11) e cinco decisões','','Olá, Rychard, Jhony e Mariel,','','Para a nossa conversa de quinta, 12/11, preparamos um projeto único com a proposta revisada, um cenário de uso e um protótipo que funciona no navegador: [colar o link].','','A proposta mudou a partir das respostas de vocês: em vez de um sistema novo, um registro único por solução dentro do Dobby, alimentado nos dois gates do Rollout Governance, com profundidade pelo tier corporativo.','','Para avançar, precisamos de cinco decisões de vocês:','1. O módulo pode viver no Dobby, com selo de estágio e arquivo de governança no repositório do agente?','2. Podem compartilhar os critérios do AI Risk Tiering, para fecharmos a equivalência de níveis?','3. Quem aceita o risco em cada nível, na estrutura nova?','4. Para o tier 1, haverá revisão de fora da Auditoria?','5. Quais são os dois casos do piloto e quem responde por cada um? Nossa sugestão: Action Plan Validator e um assistente de conhecimento em NotebookLM.','','Próxima ação: apresentamos na quinta, 12/11. Se puderem retornar sobre as cinco decisões até [confirmar data], começamos o piloto em seguida.','','Obrigado,','Thiago'].join('\n');
+  const T=['Cadastrar uma solução nova e chegar à trilha','Avaliar o risco e chegar ao tier','Preencher o Gate 2 de "Resumo de evidências"','Registrar uma decisão de uso','Registrar uma mudança e ver a materialidade'];
+  $('#ev-t').innerHTML=T.map((t,i)=>'<tr><td>'+(i+1)+'. '+t+'</td><td><select id="ev-ok'+i+'" aria-label="Conseguiu a tarefa '+(i+1)+'?"><option value="">—</option><option>Sim</option><option>Com dificuldade</option><option>Não</option></select></td><td><input type="number" min="0" id="ev-min'+i+'" aria-label="Minutos na tarefa '+(i+1)+'" style="width:90px"></td><td><select id="ev-cl'+i+'" aria-label="Clareza da tarefa '+(i+1)+'"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>').join('');
+  $('#ev').addEventListener('submit',e=>{e.preventDefault();const v=id=>(document.getElementById(id).value||'').trim()||'—';
+    $('#ev-out').value=['Avaliação do protótipo de governança de IA (NuAudit)','Data: '+fmt(today()),'Nome: '+v('ev-nome')+' · Papel: '+v('ev-papel'),'','Tarefas:'].concat(T.map((t,i)=>(i+1)+'. '+t+' | conseguiu: '+v('ev-ok'+i)+' | minutos: '+v('ev-min'+i)+' | clareza: '+v('ev-cl'+i))).concat(['','Onde pareceu burocrático: '+v('ev-bur'),'O que cortaria: '+v('ev-cut'),'O que faltou: '+v('ev-mis'),'Tier e condição batem com a percepção: '+v('ev-tier'),'Nota geral: '+v('ev-nota')]).join('\n');
+    saveEval({data:new Date().toISOString(),nome:v('ev-nome'),papel:v('ev-papel'),tarefas:T.map((t,i)=>({ok:v('ev-ok'+i),min:v('ev-min'+i),cl:v('ev-cl'+i)})),bur:v('ev-bur'),cut:v('ev-cut'),mis:v('ev-mis'),tier:v('ev-tier'),nota:v('ev-nota'),resumo:$('#ev-out').value});});
+  $('#ev-reload').addEventListener('click',loadEvals);
+}
+
+/* ---------- avaliações centralizadas (capacidade db) ---------- */
+const cap=n=>{try{return window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null);}catch(e){return Promise.resolve(null);}};
+const evSt=t=>{$('#ev-st').textContent=t;};
+/* COLE AQUI a URL do app da Web do Apps Script (termina em /exec). Vazio = não envia; a pessoa copia o resumo. */
+const SHEET_URL='https://script.google.com/macros/s/AKfycbzIWO0-9SvZC9bkPN7itB5952o0i-28-pze21VahQaonozCilrlSXyWr7sLAuCKd_-fkQ/exec';
+const FAIL='Não foi possível enviar a avaliação automaticamente. Copie o resumo e cole no canal combinado.';
+async function saveEval(d){
+  evSt('Salvando.');
+  if(SHEET_URL){
+    // no-cors: o navegador não deixa ler a resposta do Apps Script; por isso a mensagem diz "enviada", não "confirmada"
+    try{await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)});evSt('Avaliação enviada para a planilha do time. Obrigado.');}
+    catch(e){evSt(FAIL);}
+    return;
+  }
+  try{const db=await cap('db'),u=await cap('user'),id=u?await u.id():null;
+    if(!db||!id){evSt(FAIL);return;}
+    await db.doc('avaliacoes/'+id).set(d);
+    evSt('Avaliação salva. Enviar de novo substitui a anterior.');loadEvals();
+  }catch(e){evSt(FAIL);}
+}
+async function loadEvals(){
+  try{const db=await cap('db'),u=await cap('user');
+    if(!db||!u||!(await u.canEdit()))return;
+    $('#ev-adm').hidden=false;
+    const q=await db.collection('avaliacoes').get(), L=q.docs.map(x=>x.data()).filter(Boolean).sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+    $('#ev-rows').innerHTML=L.length?L.map(d=>'<tr><td>'+esc(String(d.data||'').slice(0,10))+'</td><td>'+esc(d.nome)+'</td><td>'+esc(d.papel)+'</td><td>'+esc(d.nota)+'</td><td>'+(d.tarefas||[]).map((t,i)=>(i+1)+': '+esc(t.ok)+' · '+esc(t.min)+' · '+esc(t.cl)).join('<br>')+'</td><td>'+esc(d.bur)+'</td><td>'+esc(d.cut)+'</td><td>'+esc(d.mis)+'</td><td>'+esc(d.tier)+'</td></tr>').join(''):'<tr><td colspan="9" class="muted">Nenhuma avaliação salva ainda.</td></tr>';
+    $('#ev-all').textContent=L.map(d=>d.resumo||'').join('\n\n----------\n\n');
+  }catch(e){$('#ev-rows').innerHTML='<tr><td colspan="9" class="muted">Não foi possível carregar as avaliações agora.</td></tr>';}
+}
+
+/* ---------- navegação por abas ---------- */
+const TABS=['inicio','cenario','prototipo','framework','modelos','avaliacao','quinta'];
+function route(){
+  const h=(location.hash||'#inicio').slice(1), v=TABS.includes(h)?h:'inicio';
+  TABS.forEach(t=>{document.getElementById('v-'+t).classList.toggle('on',t===v);});
+  document.querySelectorAll('nav.tabs a').forEach(a=>{if(a.getAttribute('href')==='#'+v)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+  window.scrollTo(0,0);
+}
+load(); statics(); render(); route(); loadEvals(); window.addEventListener('hashchange',route);
+</script>
+</body>
+</html>
