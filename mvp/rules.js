@@ -223,9 +223,9 @@
   }
 
   /** Estágio resultante ao aplicar uma decisão aceita. Rebaixa se o atual exceder o máximo. */
-  function estagioAposDecisao(atual, max) {
+  function estagioAposDecisao(atual, max, anterior) {
     if (max === 'Nenhum') return 'Suspensa';
-    if (atual === 'Suspensa') return 'Alpha';
+    if (atual === 'Suspensa') atual = anterior || 'Alpha';
     const ia = ESTAGIOS.indexOf(atual), im = ESTAGIOS.indexOf(max);
     if (ia < 0 || im < 0) return atual;
     return ia > im ? max : atual;

@@ -63,6 +63,8 @@ assert.equal(R.criteriosDerivados(sol).c4, null);
 assert.equal(R.estagioAposDecisao('Live', 'Beta'), 'Beta');
 assert.equal(R.estagioAposDecisao('Beta', 'Live'), 'Beta');
 assert.equal(R.estagioAposDecisao('Live', 'Nenhum'), 'Suspensa');
+assert.equal(R.estagioAposDecisao('Suspensa', 'Beta', 'Live'), 'Beta');
+assert.equal(R.estagioAposDecisao('Suspensa', 'Live', 'Live'), 'Live');
 
 // Gate 1 bloqueado com M1 pendente
 const s2 = { estagio: 'Alpha', m1: { ans: ans({ p3: '?' }), status: 'validado' }, m2: { status: 'validado' } };

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Governança de IA · NuAudit — MVP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Pular para o conteúdo</a>
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#painel">Governança de IA · NuAudit <span class="mvp">MVP</span><small>NuFuturo (UFBA/IFBA) · dados fictícios</small></a>
+    <nav class="nav" aria-label="Principal">
+      <a href="#painel" data-nav="painel">Painel</a>
+      <a href="#pendencias" data-nav="pendencias">Minhas pendências <span class="badge" id="nav-pend" hidden></span></a>
+      <a href="#guia" data-nav="guia">Como funciona</a>
+    </nav>
+    <div class="who" id="who"></div>
+  </div>
+</header>
+<div class="status-bar" id="status-bar" role="status"></div>
+<main id="main" tabindex="-1"></main>
+<div id="wizard-root"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="rules.js"></script>
+<script src="seed.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
