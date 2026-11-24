@@ -69,7 +69,7 @@
     if (i >= 0) S.sols[i] = sol; else S.sols.push(sol);
   }
   /** Aplica fn sobre uma cópia, registra o evento na trilha e grava. fn retorna texto de erro para abortar. */
-  async function alterar(id, fn, acao, detalhe) {
+  async function alterar(id, fn, acao, detalhe, quieto) {
     const atual = id ? getSol(id) : null;
     const s = atual ? clone(atual) : {};
     const err = fn(s);
@@ -80,8 +80,8 @@
     S.salvando = true; document.body.classList.add('busy'); renderStatus();
     const ok = await gravar(s, atual ? (atual.rev || 0) : 0, [ev]);
     S.salvando = false; document.body.classList.remove('busy');
-    if (ok) toast(acao + ' — registrado.', 'ok');
-    render();
+    if (ok && !quieto) toast(acao + ' — registrado.', 'ok');
+    if (!quieto) render();
     return ok;
   }
 
@@ -125,6 +125,7 @@
     if (R.decisaoVencida(s)) return { perfil: 'audit', texto: 'Renovar a decisão (aceite vencido)', aba: 'm5' };
     if (s.estagio === 'Suspensa') return { perfil: 'audit', texto: 'Propor nova decisão para retomar o uso', aba: 'm5' };
     if (R.podeGate2(s).ok) return { perfil: 'audit', texto: 'Registrar o Gate 2 (Beta → Live)', aba: 'g2' };
+    if (s.estagio === 'Beta' && dec.max === 'Beta') return { perfil: 'delivery', texto: 'Tratar as condições da decisão (limitada a Beta) e pedir nova decisão', aba: 'm3' };
     return null;
   }
   function pendencias(p) { return S.sols.map(s => ({ s, a: proxima(s) })).filter(x => x.a && x.a.perfil === p); }
@@ -224,7 +225,7 @@
       case 'm2': return t === 'Expressa' ? na('dispensado') : m2.status === 'validado' ? done('validado') : !m2Liberada(s) ? blk('aguarda M1') : m2.status === 'enviado' ? doing('em validação') : m2.status === 'devolvido' ? blk('devolvido') : todo('a avaliar');
       case 'g1': return s.gate1 ? done(fd(s.gate1.em)) : t === 'Expressa' ? na('só Alpha') : R.podeGate1(s).ok ? doing('liberado') : todo('aguarda');
       case 'm3': return !m3Liberada(s) ? todo('aguarda M2') : sit.total && !sit.semDeclaracao ? done(sit.total + ' itens') : doing((sit.total - sit.semDeclaracao) + '/' + sit.total);
-      case 'm4': return !sit.exigeRevisao ? na('autodeclarado') : !sit.total || sit.semDeclaracao === sit.total ? todo('aguarda M3') : sit.divergentes ? blk(sit.divergentes + ' divergente(s)') : sit.aguardando ? doing(sit.aguardando + ' a revisar') : done('concluída');
+      case 'm4': return !R.risco(s).idx ? todo('aguarda M2') : !sit.exigeRevisao ? na('autodeclarado') : !sit.total || sit.semDeclaracao === sit.total ? todo('aguarda M3') : sit.aguardando ? doing(sit.aguardando + ' a revisar') : done('concluída' + (sit.divergentes ? ' · ' + sit.divergentes + ' diverg.' : ''));
       case 'm5': return d && !d.invalidada && !R.decisaoVencida(s) ? done(d.cond) : d ? blk(d.invalidada ? 'reavaliar' : 'vencida') : s.m5 && s.m5.proposta ? doing('aguarda aceite') : todo('sem decisão');
       case 'g2': return s.gate2 ? done(fd(s.gate2.em)) : t === 'Expressa' ? na('só Alpha') : R.podeGate2(s).ok ? doing('liberado') : todo('aguarda');
       case 'm6': return m6Pendente(s) ? doing('ciência pendente') : (s.m6 || []).length ? done((s.m6 || []).length + ' registro(s)') : todo('nenhuma');
@@ -350,7 +351,8 @@
   function aM4(s) {
     const sit = R.situacaoControles(s), pode = papel() === 'audit';
     if (!sit.exigeRevisao) return '<div class="note info">Tier 4 ou trilha Expressa: as evidências são autodeclaradas e não exigem revisão da Audit Solutions. A auditabilidade (C4) vale no máximo 2.</div>' + counters(sit);
-    const decl = sit.itens.filter(o => o.d && !R.erroDeclaracao(o.d));
+    const ordem = { 'aguardando revisão': 0, 'divergente': 1, 'confirmado': 2 };
+    const decl = sit.itens.filter(o => o.d && !R.erroDeclaracao(o.d)).sort((a, b) => (ordem[a.sit] || 0) - (ordem[b.sit] || 0));
     if (!decl.length) return '<div class="note warn">Nenhum controle declarado ainda. A revisão começa quando o delivery team declarar os controles.</div>' + counters(sit);
     const comp = R.m4Completa(s), der = R.criteriosDerivados(s);
     return counters(sit) + (pode ? '' : soPerfil('audit', 'A revisão das evidências é da Audit Solutions (challenger).')) +
@@ -569,8 +571,9 @@
     if (act === 'editar-m1') { abrirWizard(s); return; }
     if (act === 'seed') {
       const novos = window.Seed();
-      for (const n of novos) await alterar(null, x => { Object.assign(x, n); }, 'Registro de demonstração carregado', 'Dados fictícios para teste');
-      ir('painel'); return;
+      let n = 0;
+      for (const x0 of novos) if (await alterar(null, x => { Object.assign(x, x0); }, 'Registro de demonstração carregado', 'Dados fictícios para teste', true)) n++;
+      toast(n + ' soluções de demonstração carregadas.', 'ok'); ir('painel'); render(); return;
     }
     if (act === 'enviar-m1') { await alterar(s.id, x => { x.m1.status = 'enviado'; x.m1.por = nomeAtual(); x.m1.em = agora(); }, 'Enquadramento enviado para validação', 'Trilha ' + trilha(s)); return; }
     if (act === 'add-cen' || act === 'del-cen') {
